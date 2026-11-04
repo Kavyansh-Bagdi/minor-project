@@ -1,79 +1,122 @@
-
 TASK:
 Analyze the provided research paper and generate a structured
-literature review entry in LaTeX.
+literature review entry in LaTeX, written as study notes.
 
 INSTRUCTIONS:
-1. Read the entire research paper before extracting information.
-2. Use only information explicitly available in the paper.
-3. Do not fabricate results, datasets, metrics, or methodologies.
+1. Read the entire paper before extracting information.
+2. Use only information explicitly stated in the paper.
+3. Do not fabricate results, datasets, metrics, or methods.
 4. If information is unavailable, write "Not Specified".
-5. Keep explanations concise, technically accurate, and academic.
-6. Distinguish the authors' contributions and limitations from
-   your own critical analysis.
-7. Identify potential research gaps based on the paper's
-   actual findings and limitations.
-8. Return ONLY valid LaTeX code without Markdown fences
-   or additional explanations.
+   Example: if the paper has no baseline comparison, write
+   "Baseline comparison: Not Specified."
+5. Use the paper's own wording for claims. Do not make a claim
+   stronger than the paper does (e.g., if the paper says
+   "undisclosed", do not rewrite it as "zero-day").
+6. Copy numbers exactly (counts, percentages, times). Do not
+   round or recompute them.
+7. Keep the authors' contributions and limitations separate
+   from your own critical analysis.
+8. Base research gaps on the paper's actual findings and
+   limitations.
+9. Return ONLY valid LaTeX code. No Markdown fences. No
+   explanations before or after.
 
-LANGUAGE AND WRITING STYLE:
+WRITING STYLE (NOTES, NOT A REPORT):
+1. Write short bullet points, not paragraphs.
+2. Sentence fragments are fine. Drop filler words.
+3. Use simple, clear English and common technical terms.
+4. One idea per bullet. Use nested bullets for sub-points.
+5. Bold the lead-in label when a bullet starts with a label
+   (e.g., \textbf{Setup:} ...).
+6. No repeated explanations, no background the reader knows.
+7. Stay technically accurate. Do not shorten at the cost of
+   correctness.
 
-1. Use simple, clear, and technically accurate English.
-2. Prefer short sentences over long, complex sentences.
-3. Use common technical terms wherever possible.
-4. Avoid unnecessary academic jargon, fancy vocabulary,
-   and overly formal expressions.
-5. Explain technical concepts directly without making
-   them unnecessarily complicated.
-6. Maintain a professional academic tone.
-7. Write as a technically knowledgeable researcher
-   explaining the work to another researcher.
-8. Be precise. Every sentence should communicate useful
-   information.
-9. Avoid repetitive explanations and unnecessary context.
-10. Do not sacrifice technical accuracy for simplicity.
+LATEX RULES:
+1. Escape special characters: \%, \&, \_, \#.
+2. Use math mode for symbols and dataset names (e.g., $D_G$).
+3. Use ``double quotes'' in LaTeX style.
+4. Use \url{...} for links.
+5. Do not use the name \part for any macro. It is already
+   defined by LaTeX. My preamble defines \entrypart{...}
+   for the numbered headings.
+6. Output only the \section{...} block. I already have the
+   preamble, \begin{document} and \end{document}.
+7. Keep the code compilable with pdflatex.
+
+PREAMBLE ASSUMED (already in my document):
+article class, enumitem, xcolor, a color named "accent", and:
+\newcommand{\entrypart}[1]{\textbf{\color{accent}#1}\par\vspace{2pt}}
 
 OUTPUT FORMAT:
 
 \section{Paper N: Title of the Research Paper}
 
-\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+\begin{enumerate}
 
-    \item \textbf{Paper Details}
+    \item \entrypart{Paper Details}
 
-    Authors: [Author names]
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & [Author names] \\[2pt]
+        Publication Year & [Year (venue, dates)] \\[2pt]
+        DOI/Link         & \url{[DOI or URL]}
+    \end{tabular}
 
-    Publication Year: [Year]
+    \item \entrypart{Research Problem}
+    [Bullets: problem, why it matters, and the challenges the
+    paper lists.]
 
-    DOI/Link: \url{[DOI or URL]}
+    \item \entrypart{Proposed Approach}
+    [Bullets: main idea first. Then one bold sub-bullet per
+    module or stage, with nested bullets for methods,
+    algorithms, models, and tools.]
 
-    \item \textbf{Research Problem}
+    \item \entrypart{Dataset and Evaluation}
+    [Bullets: data sources, dataset sizes and splits, ground
+    truth, setup, metrics. Include "Baseline comparison:"
+    and write Not Specified if absent.]
 
-    [Problem addressed and its significance.]
+    \item \entrypart{Key Findings}
+    [Bullets grouped by topic with bold labels. Include exact
+    numbers, headline results, and any case studies or
+    exploits.]
 
-    \item \textbf{Proposed Approach}
+    \item \entrypart{Contribution and Limitations}
 
-    [Methodology, algorithms, models, and technologies.]
+    \textbf{Contributions (authors)}
+    [Bullets]
 
-    \item \textbf{Dataset and Evaluation}
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    [Bullets: only limitations the authors state.]
 
-    [Dataset, experimental setup, and evaluation metrics.]
+    \item \entrypart{My Analysis}
 
-    \item \textbf{Key Findings}
+    \textbf{Good}
+    [Bullets]
 
-    [Important experimental results and findings.]
+    \vspace{4pt}
+    \textbf{Weak points}
+    [Bullets: your own critical observations.]
 
-    \item \textbf{Contribution and Limitations}
-
-    [Major contributions and limitations acknowledged
-    by the paper's authors.]
-
-    \item \textbf{My Analysis}
-
-    [Independent critical observations, unresolved issues,
-    and potential research gaps.]
+    \vspace{4pt}
+    \textbf{Research gaps}
+    [Bullets]
 
 \end{enumerate}
+
+WHAT TO CHECK IN "MY ANALYSIS":
+- How much of the data was actually validated vs analyzed.
+- Overlap between data used to design the method and data used
+  to evaluate it.
+- Dataset or vendor/domain bias.
+- Dependence on heuristics or manual steps.
+- Missing baselines, unclear metric definitions.
+- What the method does not cover that the paper itself
+  describes as a real problem.
+- Whether results were shown on only one case or device.
+Mark anything you are unsure about as an observation, not a
+fact.
 
 PAPER NUMBER: [Enter paper number]
 
