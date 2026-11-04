@@ -76,212 +76,7 @@
 
 \begin{document}
 
-\section{1 Your Firmware Has Arrived: A Study of Firmware Update Vulnerabilities}
-
-\begin{enumerate}
-
-    % ---------- 1 ----------
-    \item \entrypart{Paper Details}
-
-    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
-        Authors          & Yuhao Wu, Jinwen Wang, Yujie Wang, Shixuan Zhai, Zihan Li, Yi He, Kun Sun, Qi Li, Ning Zhang \\[2pt]
-        Publication Year & 2024 (USENIX Security '24, Philadelphia, Aug 14--16) \\[2pt]
-        DOI/Link         & \url{https://www.usenix.org/conference/usenixsecurity24/presentation/wu-yuhao}
-    \end{tabular}
-
-    % ---------- 2 ----------
-    \item \entrypart{Research Problem}
-
-    \begin{itemize}
-        \item Firmware updates fix bugs, but the update process is also an attack surface.
-        \item Many update flaws are logic flaws: missing or weak verification (no version check, MD5 for integrity).
-        \item These are not memory bugs, so existing firmware tools do not find them.
-        \item Three challenges:
-        \begin{itemize}
-            \item \textbf{C1:} update paths cross front-end code, scripts, and binaries, with different languages and IPC types.
-            \item \textbf{C2:} no standard for verification code, so it is hard to recognize.
-            \item \textbf{C3:} static alerts have false positives. Testing a later check needs an input that passes the earlier checks.
-        \end{itemize}
-    \end{itemize}
-
-    % ---------- 3 ----------
-    \item \entrypart{Proposed Approach}
-
-    \textbf{Systematization first}
-    \begin{itemize}
-        \item 4-phase update workflow: generation, delivery, verification, installation.
-        \item 381 update-related CVEs mapped to these phases.
-        \item Conclusion: focus on the verification phase, since good verification blocks most issues from other phases.
-    \end{itemize}
-
-    \textbf{ChkUp} (binary-only tool for OS-based firmware, mainly Linux, with file systems). Four modules:
-
-    \begin{itemize}
-        \item \textbf{Execution Path Recovery}
-        \begin{itemize}
-            \item Find entry program by pattern matching (prompt messages, variable/function names, common code).
-            \item Build Update Flow Graph (UFG): basic-block level, covers HTML/JS, shell scripts, binaries. Edge types: intra-process flow, IPC, program invocation.
-            \item Backward slicing from reboot calls gives update paths.
-            \item Path explosion handled by: skip std libs, skip built-in utilities, timeout, path filtering by prompts, path merging.
-        \end{itemize}
-        \item \textbf{Verification Procedure Recognition}
-        \begin{itemize}
-            \item Stage 1: rank functions by similarity to a corpus. Uses numeric syntactic and structural features. Threshold 0.5.
-            \item Stage 2: DFG subgraph isomorphism (Ullmann). Also checks that return values or by-reference args feed a conditional.
-            \item Corpus: 129 functions (76 from libraries, 53 proprietary).
-        \end{itemize}
-        \item \textbf{Vulnerability Discovery}
-        \begin{itemize}
-            \item Checks authenticity, integrity, freshness, compatibility.
-            \item Missing verification is reported.
-            \item Improper verification:
-            \begin{itemize}
-                \item authenticity: symmetric algorithms (HMAC, CMAC, Poly1305)
-                \item integrity: CRC, SHA1, MD5
-                \item freshness/compatibility: info from unprotected sources (e.g., filename)
-            \end{itemize}
-            \item Multiple paths: pick the one with the most proper verification.
-        \end{itemize}
-        \item \textbf{Vulnerability Validation}
-        \begin{itemize}
-            \item Only for emulatable firmware. Build a PoC image per alert type.
-            \item Patch other checks (invert branches, or binary rewriting with recorded values) and repack.
-            \item Vulnerable if the update still reaches reboot.
-            \item Tools: Firmadyne, FirmAE, angr, Ghidra, NetworkX, Firmware-mod-kit.
-            \item Non-emulatable images: manual validation.
-        \end{itemize}
-    \end{itemize}
-
-    % ---------- 4 ----------
-    \item \entrypart{Dataset and Evaluation}
-
-    \begin{itemize}
-        \item \textbf{Collection:} 157,141 images from 204 vendors. 111,958 unpacked.
-        \item \textbf{$D_L$:} 12,000 random images, 8 vendors (Netgear, TP-Link, D-Link, TRENDnet, Asus, Ubiquiti, Zyxel, Linksys).
-        \item \textbf{$D_G$ (ground truth):} 150 images from $D_L$, weighted random sampling, 33 device families. Labeled by 4 security researchers with cross-validation.
-        \item \textbf{Setup:} Ubuntu 18.04, AMD EPYC 7302P, 64GB RAM.
-        \item \textbf{Metrics:}
-        \begin{itemize}
-            \item Entry finding: accuracy, with ablation of pattern types P1/P2/P3.
-            \item UFG: soundness and completeness.
-            \item Procedure recognition: TP, FN, FP.
-            \item Validation: patch, emulation, and PoC success rates.
-            \item Overall: TPR, FPR.
-            \item Analysis time.
-        \end{itemize}
-        \item Validation scalability tested on 1,200 more images from $D_L$.
-        \item \textbf{Baseline comparison:} Not Specified.
-    \end{itemize}
-
-    % ---------- 5 ----------
-    \item \entrypart{Key Findings}
-
-    \begin{itemize}
-        \item \textbf{CVE study}
-        \begin{itemize}
-            \item CVE count doubled from 2020 to 2021.
-            \item High and critical CVEs are nearly 4x low and medium.
-            \item Top 8 CWE types (47.67\%) are mostly missing or improper verification.
-        \end{itemize}
-        \item \textbf{Entry finding:} best with all patterns. P2 (variable/function names) matters most. 9 Netgear images had wrong entries.
-        \item \textbf{UFGs (150 total)}
-        \begin{itemize}
-            \item 122 sound and complete. 136 sound, 133 complete.
-            \item Unsound: 7 Asus, 4 D-Link, 3 Zyxel.
-            \item Incomplete: 9 Netgear (wrong entry), 3 Zyxel (entry/back-end mismatch), 5 TP-Link (timeout).
-        \end{itemize}
-        \item \textbf{Recognition:} 461 TP, 45 FN, 17 FP. Integrity checks recognized best. Bad paths caused 23 FN and 6 FP.
-        \item \textbf{Time per image:} 126.0 s (path recovery), 216.1 s (recognition).
-        \item \textbf{Validation on $D_G$}
-        \begin{itemize}
-            \item 271 alerts. 119 on 72 emulatable images. 90 needed patching.
-            \item 69 patched images built. 88 test environments built.
-            \item 73 PoCs worked (TP). 6 were FP. 9 failed but should be TP.
-            \item 9 of the 15 failures: wrong verification procedure chosen for bypass.
-        \end{itemize}
-        \item \textbf{Scalability (1,200 images):} 44.1\% emulatable. 72.2\% of those repacked. 82.7\% of repacked ones emulated. Main failure cause: runtime signature checks.
-        \item \textbf{Large-scale run on $D_L$}
-        \begin{itemize}
-            \item 93.4\% done within 600 s.
-            \item Paths resolved for 10,670 images. 15,132 alerts. 1,330 images unresolved.
-            \item Most common issue: improper integrity verification (39.0\% CRC, 23.8\% MD5).
-            \item Most alerts: network devices and cameras.
-        \end{itemize}
-        \item \textbf{Overall on $D_G$:} TPR 86.7\%, FPR 5.3\%.
-        \item \textbf{Disclosure:} 25 CVE IDs, 1 PSV ID. Mostly CWE-345 and CWE-20. Asus results were n-day (CVE-2014-2718, CVE-2020-15498, CVE-2021-3166). 29 other device families were zero-day.
-        \item \textbf{Case study (Netgear WNR)}
-        \begin{itemize}
-            \item Freshness and compatibility checked via filename on front end.
-            \item Integrity: CRC. Authenticity: missing.
-            \item Built a downgrade attack and a modification attack.
-            \item Both work over the same network or by MITM, since update uses plain HTTP.
-        \end{itemize}
-    \end{itemize}
-
-    % ---------- 6 ----------
-    \item \entrypart{Contribution and Limitations}
-
-    \textbf{Contributions (authors)}
-    \begin{itemize}
-        \item 4-phase systematization of update security from 381 CVEs.
-        \item ChkUp: handles diverse update components, recognizes verification procedures, validates alerts.
-        \item Real-world results: 12,000 images analyzed, 150 validated, 25 CVEs and 1 PSV ID.
-        \item Two working exploits on a Netgear router.
-    \end{itemize}
-
-    \vspace{4pt}
-    \textbf{Limitations (authors)}
-    \begin{itemize}
-        \item Entry and path heuristics can fail on customized firmware. Analysis then cannot start.
-        \item Verification heuristic fails on unconventional designs.
-        \item Ground truth is only an approximation (manual work).
-        \item Static analysis: false alarms.
-        \item Dynamic validation: one path at a time, needs emulation, needs correct patching.
-        \item Only 72 of 150 images emulatable. Even lower for bare-metal.
-        \item Only OS-based firmware with file systems. Bare-metal not supported.
-        \item Unsupported: PHP in update steps, unusual IPC.
-        \item Repacking fails on uncommon file systems.
-        \item Validation is slow and manual, so limited to 150 images.
-    \end{itemize}
-
-    % ---------- 7 ----------
-    \item \entrypart{My Analysis}
-
-    \textbf{Good}
-    \begin{itemize}
-        \item Targets logic bugs in update verification, a gap in firmware analysis.
-        \item Large-scale run, real CVEs, working exploits.
-    \end{itemize}
-
-    \vspace{4pt}
-    \textbf{Weak points}
-    \begin{itemize}
-        \item Only 150 of 12,000 images validated (about 1\%). The 15,132 alerts were not checked. TPR/FPR only hold for $D_G$.
-        \item Entry patterns, corpus, and outlier exceptions came from manual analysis of the same eight vendors. Not stated whether $D_G$ was kept separate from this design work. Results may be optimistic.
-        \item Only 8 router/camera vendors. Other vendors and device types: Not Specified.
-        \item Heavy heuristic dependence (entry patterns, value-to-condition rule, corpus). Manual exceptions do not scale. Obfuscated or encrypted update code is not discussed.
-        \item Multi-path images: only the ``best verified'' path is kept. May miss weaker paths (recovery mode, other interfaces). Effect on FN not measured.
-        \item Covers only the verification phase. Delivery (HTTP, hard-coded keys), installation bugs, and bootloader checks are not detected, though the paper lists them as real issues.
-        \item Exploits shown on one device family only.
-        \item TPR/FPR formulas and denominators not clearly given. No comparison with other tools.
-    \end{itemize}
-
-    \vspace{4pt}
-    \textbf{Research gaps}
-    \begin{itemize}
-        \item Bare-metal/RTOS support, and languages like PHP.
-        \item Better emulation and repacking (uncommon file systems, runtime signature checks).
-        \item Automatic discovery of entry points and verification functions, with less manual work.
-        \item Full update chain analysis: delivery, companion apps, bootloader, and verification together.
-        \item Bigger, independent ground truth and baseline comparison.
-        \item Checking whether vendor patches actually fix the issues. Not studied.
-    \end{itemize}
-
-\end{enumerate}
-
-\newpage
-
-\section{2 50 Shades of Support: A Device-Centric Analysis of Android Security Updates}
+\section{1 50 Shades of Support: A Device-Centric Analysis of Android Security Updates}
 
 \begin{enumerate}
 
@@ -479,7 +274,7 @@
 
 \newpage
 
-\section{3 An Analysis of Pre-installed Android Software}
+\section{2 An Analysis of Pre-installed Android Software}
 
 \begin{enumerate}
 
@@ -653,7 +448,7 @@
 
 \newpage
 
-\section{4 An Investigation of the Android Kernel Patch Ecosystem}
+\section{3 An Investigation of the Android Kernel Patch Ecosystem}
 
 \begin{enumerate}
 
@@ -817,7 +612,7 @@
 
 \newpage
 
-\section{5 Can We Trust the Phone Vendors? Comprehensive Security Measurements on the Android Firmware Ecosystem}
+\section{4 Can We Trust the Phone Vendors? Comprehensive Security Measurements on the Android Firmware Ecosystem}
 
 \begin{enumerate}
 
@@ -1002,7 +797,7 @@
 
 \newpage
 
-\section{18 FirmScope: Automatic Uncovering of Privilege-Escalation Vulnerabilities in Pre-Installed Apps in Android Firmware}
+\section{5 FirmScope: Automatic Uncovering of Privilege-Escalation Vulnerabilities in Pre-Installed Apps in Android Firmware}
 
 \begin{enumerate}
 
@@ -1150,7 +945,7 @@
 
 \newpage
 
-\section{19 Beneath the Surface: An Analysis of OEM Customizations on the Android TLS Protocol Stack}
+\section{6 Beneath the Surface: An Analysis of OEM Customizations on the Android TLS Protocol Stack}
 
 \begin{enumerate}
 
@@ -1301,7 +1096,7 @@
 
 \newpage
 
-\section{20 The Doom of Device Drivers: Your Android Device (Most Likely) has N-Day Kernel Vulnerabilities}
+\section{7 The Doom of Device Drivers: Your Android Device (Most Likely) has N-Day Kernel Vulnerabilities}
 
 \begin{enumerate}
 
@@ -1440,7 +1235,7 @@
 
 \newpage
 
-\section{21 Too Quiet in the Library: An Empirical Study of Security Updates in Android Apps' Native Code}
+\section{8 Too Quiet in the Library: An Empirical Study of Security Updates in Android Apps' Native Code}
 
 \begin{enumerate}
 
@@ -1562,7 +1357,7 @@
 
 \newpage
 
-\section{22 Semantic-Enhanced Static Vulnerability Detection in Baseband Firmware}
+\section{9 Semantic-Enhanced Static Vulnerability Detection in Baseband Firmware}
 
 \begin{enumerate}
 
@@ -1702,7 +1497,7 @@
 
 \newpage
 
-\section{23 A Thorough Security Analysis of BLE Proximity Tracking Protocols}
+\section{10 A Thorough Security Analysis of BLE Proximity Tracking Protocols}
 
 \begin{enumerate}
 
