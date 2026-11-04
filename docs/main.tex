@@ -279,4 +279,1562 @@
 
 \end{enumerate}
 
+\newpage
+
+\section{2 50 Shades of Support: A Device-Centric Analysis of Android Security Updates}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Abbas Acar, G\"uliz Seray Tuncay, Esteban Luques, Harun Oz, Ahmet Aris, Selcuk Uluagac \\[2pt]
+        Publication Year & 2024 (NDSS 2024, San Diego, 26 Feb -- 1 Mar) \\[2pt]
+        DOI/Link         & \url{https://dx.doi.org/10.14722/ndss.2024.24175}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item SPLs improved traceability of patches, but not timeliness or availability of updates for end users.
+        \item Scale problem: Samsung has 1400 unique models of 402 devices, 97 countries, 109 carriers. About 20K variations of each update.
+        \item Prior work (rollout delay studies) has two gaps:
+        \begin{itemize}
+            \item Mostly flagship devices only.
+            \item Short timeframes, so the full device lifecycle (incl. after support ends) is not covered.
+        \end{itemize}
+        \item Prior work blames delay mainly on fragmentation. Other factors (support type, model, region) largely ignored.
+        \item Research questions:
+        \begin{itemize}
+            \item \textbf{RQ1:} What does the maintenance history of a device look like over its lifecycle?
+            \item \textbf{RQ2:} What factors affect update distribution during support?
+            \item \textbf{RQ3:} What risks do unpatched devices pose, and when do they become unsafe?
+            \item \textbf{RQ4:} What issues cause user concerns, and what good practices can all OEMs adopt?
+        \end{itemize}
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Device-centric measurement study} (no new tool). Uses only official, public OEM data.
+
+    \begin{itemize}
+        \item \textbf{Data collection}
+        \begin{itemize}
+            \item \textbf{Samsung:} built all $\langle$model/CSC$\rangle$ URLs from official models + community CSC list. Queried almost half a million pairs, found 21461 valid pairs.
+            \item \textbf{Xiaomi:} history from a third-party site that polls the official API every six hours since 2018. Latest updates checked against the official API.
+            \item \textbf{Oppo:} regional update sites. Downloaded all firmware to extract SPL from config files (change log only gives SPL for the latest release).
+            \item \textbf{Google:} full OTA images only (Nexus excluded). SPL from Google's build-number table.
+            \item \textbf{Support lists:} Wayback Machine snapshots (Samsung 508, Oppo 17, Xiaomi 8) + Google's guaranteed-date lists.
+        \end{itemize}
+        \item \textbf{Metrics (per device / pair)}
+        \begin{itemize}
+            \item \textbf{Update count:} number of updates in the support period.
+            \item \textbf{Support duration:} first to last update (also per support type).
+            \item \textbf{Update frequency:} average gap between updates.
+            \item \textbf{Release delay:} AOSP SPL release to OEM firmware release.
+        \end{itemize}
+        \item \textbf{Unsupported-period risk analysis}
+        \begin{itemize}
+            \item EOL = date of last update received.
+            \item CVEs mapped to devices by last Android version and chipset. Sources: AOSP bulletin, Samsung bulletin, NIST.
+            \item CVEs published before EOL filtered out. Remaining CVEs grouped into 3-month quarters after EOL.
+            \item Aggregated with a cumulative weighted average (CWA) over active devices per quarter.
+        \end{itemize}
+        \item \textbf{Factor analysis:} support type, geolocation, device type, carrier association, partnership/platform programs (AER, Samsung Knox).
+        \item \textbf{Tools:} Jupyter notebooks, Python (pandas, numpy, matplotlib, plotly, etc.).
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Total:} 366592 updates ($\sim$367K), 599 unique devices, 2014--2023.
+        \begin{itemize}
+            \item \textbf{Samsung:} 354165 updates, 275 devices, 97 countries, 109 carriers (Apr 2015 -- Mar 2023). 343K had an SPL, 11K did not.
+            \item \textbf{Xiaomi:} 2286 updates, 223 devices, 10 regions, 756 model-region pairs (Dec 2014 -- Jun 2023).
+            \item \textbf{Oppo:} 9241 updates, 72 devices, 35 countries, 1124 country-device pairs (Jan 2018 -- Aug 2022).
+            \item \textbf{Google:} 900 updates, 20 devices (Nov 2015 -- Mar 2023).
+        \end{itemize}
+        \item \textbf{CVE data:} 2930 CVEs with known Android version, 1649 with known chipset. 4579 assigned in total.
+        \item \textbf{Ground truth:} Not Specified (measurement study).
+        \item \textbf{Setup:} No hardware dependencies. Experiments take 5--30 compute-minutes each.
+        \item \textbf{Baseline comparison:} Not Specified. Google is used as a reference OEM (``baseline rather than comparative evaluation'').
+        \item \textbf{Reproducibility:} dataset and code released (\url{https://github.com/cslfiu/Android-Security-Updates}).
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Lifecycle per OEM (supported period)}
+        \begin{itemize}
+            \item \textbf{Samsung:} 16.5 updates on average (2.5 major OS upgrades), 757 days support, update every 50 days, 140 days release delay. 211 of 256 devices under 70 days delay. 18 pairs got more than six years (13 South Korea, 4 Taiwan, 1 Hong Kong).
+            \item \textbf{Samsung SPL history:} early SPLs (2016-05 to 2017-05) assigned in batch after 2000 days. After 2018-06, most devices updated within $\sim$70 days.
+            \item \textbf{Xiaomi:} 3 updates, 170 days support (274 in China), every 48 days, 32 days delay. Delay fell from 163 days (Dec 2018 SPL) to 25 days (2023).
+            \item \textbf{Oppo:} 8 updates, 583 days support, every 85 days, 35 days delay.
+            \item \textbf{Google:} monthly updates, no delay or missed SPLs.
+        \end{itemize}
+        \item \textbf{Unpatched devices}
+        \begin{itemize}
+            \item 8594 of 23361 pairs (36.7\%) got at least one impacting CVE after three months without updates.
+            \item Average CVEs per unpatched device: 76 (first quarter), 382 ($\sim$two years), 600 (five years).
+            \item Critical CVEs reach about 50, then taper off after $\sim$two years.
+            \item 89\% need no user interaction. Under 1\% high complexity. 67\% local, $\sim$27\% remote (network).
+            \item \textbf{Case study (Galaxy Z Fold3 5G):} four US carrier pairs had no update for almost 10 months. 142 CVEs (6 critical, 82 high). All six critical: remote and no user interaction (e.g., CVE-2023-20946).
+        \end{itemize}
+        \item \textbf{Support type (Samsung)}
+        \begin{itemize}
+            \item Time on lists: 1044 / 573 / 580 days (monthly / quarterly / biannual), 2197 days ($\sim$6 years) total.
+            \item Actual median support: 1034 / 560 / 442 days. Biannual support is much shorter than listed.
+            \item Updates: 33 / 9 / 4. Median frequency: 30 / 53 / 91 days (better than the names imply).
+            \item Delay: 25 / 42 / 62 days. Up to 300 days for some models still on the list.
+            \item \textbf{Oppo:} monthly-listed devices got no updates while on the list.
+        \end{itemize}
+        \item \textbf{Geolocation}
+        \begin{itemize}
+            \item \textbf{Samsung monthly:} top five (Luxembourg, Russia, Switzerland, Uzbekistan, India) get updates every 26--28 days with 18--21 days delay.
+            \item Bottom five are all in Latin America and the Caribbean: 15--17 updates, $\sim$50 days delay.
+            \item Top five get two times more updates. Bottom five have three times longer delay.
+            \item \textbf{Xiaomi:} Singapore 6 updates, China 4.5. China support 274 days vs 136 elsewhere.
+            \item \textbf{Oppo:} Europe 9 updates (every 68 days). Other regions fewer and less frequent (86--89 days).
+        \end{itemize}
+        \item \textbf{Device type:} Samsung tablets never get monthly support. Phones stay on lists 2202 days vs 927 for tablets. No effect for Google or Xiaomi.
+        \item \textbf{Carrier:} minimal effect. Samsung carrier-branded 29 vs non-carrier 32 monthly updates. Delay 29 vs 26 days.
+        \item \textbf{Partnerships:} not a major factor within the same support type, but affect which support type a device gets. Android Go: 108 days biannual support vs 372 for Knox devices.
+        \item \textbf{Key issues}
+        \begin{itemize}
+            \item \textbf{Pair variation:} Galaxy S20 FE 5G support end differs by more than two years (Hungary Oct 2020 vs Bulgaria Mar 2023).
+            \item \textbf{Support lists:} Galaxy A7 (2018) pair stopped updates 1272 days before leaving the list. Oppo Reno4 models in 16 countries: no updates since 2020.
+            \item \textbf{AER:} of 5125 Samsung AER pairs, 94\% (4835) updated in last two months. But 201 pairs none in a year, 58 in two years, 15 in three years.
+            \item \textbf{Misleading announcements:} ``at least four years'' list (85 devices, 8033 pairs): 343 pairs had no update in the last year.
+        \end{itemize}
+        \item \textbf{Good practices:} guaranteed support date (Google, Motorola; FTC recommends it), EOS lists (Motorola, Xiaomi), model-level support lists (Oppo).
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item Largest official dataset in the literature ($\sim$367K updates, 599 devices, 97 countries, 109 carriers).
+        \item Factors affecting update availability and timeliness: support type, geolocation, device type, partnership agreements.
+        \item First study of the security posture of unpatched Android devices.
+        \item Key issues and good practices across OEMs.
+        \item Dataset and code released for full reproducibility.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Samsung dataset is much larger than the others.
+        \item No Oppo data for China, the US, or the UK (needs non-public device info).
+        \item No data on the active user base of unpatched devices.
+        \item Smaller OEMs and carriers not covered. They do not publish usable update histories.
+        \item Cannot explain the reasons behind delays. Only OEMs can.
+        \item OEM release date may differ from when the end user gets the update. End-user behavior out of scope.
+        \item Support durations are a lower bound.
+        \item Xiaomi support lists were inconsistent, so results from them were disregarded.
+        \item Too few Oppo updates to analyze support types properly.
+        \item Devices with no updates were excluded from overall characterization.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Covers the whole lifecycle, including after support ends, and non-flagship devices.
+        \item Only official, public data. Fully reproducible artifact.
+        \item Breaks ``delay'' into clear, separate metrics. Shows why one metric alone misleads (e.g., Oppo Reno4: frequent but only two updates).
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Strong Samsung bias: 354165 of 366592 updates are Samsung. Cross-OEM comparisons rest on much smaller samples.
+        \item SPL taken as reported by the OEM. Whether patches are actually present in firmware is not checked.
+        \item CVE mapping by Android version + chipset only. Likely over-counts (component may not exist on the device) and ignores Google Play system updates after EOL. Observation, not verified.
+        \item EOL is inferred from the last update seen. Collection gaps could make some devices look unsupported.
+        \item Support-type results rest on few completed periods (only 20 monthly devices for Samsung).
+        \item Xiaomi history comes from a third-party tracker. Only the latest updates were checked against the official API.
+        \item Small inconsistencies: Oppo AER count given as 18 and as 23. Fig. 5 caption says 86\% need ``minimal effort'', the text says under 1\% high complexity.
+        \item Correlations only. No causes for regional or model differences.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Check whether the claimed SPL matches the patches actually present in the firmware.
+        \item Low-cost and smaller OEMs (not covered here). Their update behavior is unknown.
+        \item End-user side: when users actually receive and install updates.
+        \item Effect of Google Play system updates (Mainline) on post-EOL risk.
+        \item International carriers' effect on delay (left as future work).
+        \item Reasons behind OEM decisions (e.g., surveys or OEM interviews).
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{3 An Analysis of Pre-installed Android Software}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Julien Gamba, Mohammed Rashed, Abbas Razaghpanah, Juan Tapiador, Narseo Vallina-Rodriguez \\[2pt]
+        Publication Year & 2020 (IEEE Symposium on Security and Privacy, S\&P 2020) \\[2pt]
+        DOI/Link         & \url{https://doi.org/10.1109/SP40000.2020.00013}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Vendors ship custom Android with pre-installed apps on the system partition. Users often do not know they exist.
+        \item Pre-installed apps are mostly not on app stores, so they escape scrutiny by researchers and regulators.
+        \item Known incidents: Adups backdoor (BLU R1 HD), MTKLogger, Triada in low-cost phones, secret data deals (Facebook, GMobi).
+        \item No prior systematic study of this ecosystem. Hard to collect such software at scale across vendors.
+        \item Questions:
+        \begin{itemize}
+            \item Who are the actors in the pre-installed app supply chain?
+            \item What are the relationships between vendors, MNOs and third parties?
+            \item Do pre-installed apps collect PII, and who gets it?
+            \item Are there harmful or dangerous apps among them?
+        \end{itemize}
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Crowd-sourced measurement study}, combining static analysis, real traffic data and manual reverse engineering.
+
+    \begin{itemize}
+        \item \textbf{Data collection}
+        \begin{itemize}
+            \item \textbf{Firmware Scanner} (own app on Google Play): extracts apps, DEX files, libraries, vendor files and root certificates from \texttt{/system/}. Uploads only files missing on the server (by MD5), over Wi-Fi.
+            \item \textbf{Lumen:} VPN-based app that sees app traffic in user-space and sends only anonymized flow metadata.
+            \item Potentially rooted devices removed (user answer + RootBeer + custom ROM evidence).
+        \end{itemize}
+        \item \textbf{Ecosystem analysis}
+        \begin{itemize}
+            \item Signing certificates (Issuer field) to find developers.
+            \item Third-party libraries (TPLs) with LibRadar++.
+            \item Public vs non-public apps by crawling Google Play.
+        \end{itemize}
+        \item \textbf{Permission analysis} (Androguard): declared and requested custom permissions, and exported components without protection.
+        \item \textbf{Behavioral analysis}
+        \begin{itemize}
+            \item Static triage: Androwarn, FlowDroid, Amandroid, Apktool, Androguard scripts. 36 harmful/privacy behaviors.
+            \item Traffic: match Lumen flows to pre-installed apps by package name, version and vendor.
+            \item Manual analysis of top-scored apps: baksmali, jadx, dex2jar, Apktool, Frida, radare2, IDA Pro.
+        \end{itemize}
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Firmware Scanner:} 2,748 users, 1,742 device models, 214 vendors, 130 countries.
+        \begin{itemize}
+            \item 424,584 unique files. Study focuses on 82,501 apps (6,496 unique package names).
+            \item 321 potentially rooted handsets excluded.
+            \item Users: 35\% Europe, 29\% America, 24\% Asia. Up to 25\% of devices Samsung, 20\% Huawei.
+        \end{itemize}
+        \item \textbf{Lumen:} over 20.4K users, 144 countries, 291 vendors, 34,553,193 flows from 139,665 apps. 1,055 pre-installed app/version/vendor combinations in both datasets.
+        \item \textbf{Behavioral analysis:} one APK per package name. Reports for 48\% of them (most failures: odexed files without the framework file). Triaged set: $N = 3{,}154$.
+        \item \textbf{Manual analysis:} 158 apps.
+        \item \textbf{Ground truth / metrics:} Not Specified. Results are counts and case studies.
+        \item \textbf{Baseline comparison:} Not Specified.
+        \item \textbf{Ethics:} approved by institutional Ethics Board and DPO. IMEI stored only as MD5 hash.
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Not public:} only 9\% of package names are on Google Play. 74\% of non-public apps do not seem to get updated. 41\% unpatched for 5 years or more.
+        \item \textbf{Developers and certificates}
+        \begin{itemize}
+            \item 1,200 unique certificates. Long tail of third parties (LinkedIn, Spotify, ironSource, TrueCaller, AccuWeather, Adups, GMobi).
+            \item 42 different ``Android Debug'' certificates on phones from 21 brands. 115 certificates with only ``Android'' as Issuer.
+            \item 123 apps signed by Facebook, on 939 devices (68\% Samsung).
+        \end{itemize}
+        \item \textbf{Third-party libraries}
+        \begin{itemize}
+            \item 11,665 unique TPLs. 334 in advertising, analytics and social network categories.
+            \item Facebook Graph SDK in 806 apps on 748 devices. Only 98 of these apps signed by Facebook (293 by vendor, 30 by operator).
+            \item Chinese-market TPLs (Tencent, AliPay, Baidu) in 548 apps.
+        \end{itemize}
+        \item \textbf{Custom permissions}
+        \begin{itemize}
+            \item 4,845 custom permissions from 1,795 packages across 108 vendors.
+            \item 63\% defined by 31 handset vendors. Samsung 41\%, Huawei 20\%, Sony 7\%. 9\% could not be attributed.
+            \item Many are exposed by core Android services. Reveal partnerships (Facebook, Baidu, Digital Turbine, ironSource, Hiya, TrueCaller).
+            \item Baidu's location permission could let apps bypass Android's location permission.
+        \end{itemize}
+        \item \textbf{Requested permissions:} 55 apps request more than 100. Core \texttt{android} module: 9 permissions on a Google device, over 100 on most Samsung devices. 2,910 apps request at least one custom permission.
+        \item \textbf{Exported components:} 6,849 apps potentially expose at least one activity (166 vendors). 4,591 apps expose services (157 vendors). Top-10 vendors account for over 70\%.
+        \item \textbf{Behaviors (static, $N = 3{,}154$):} contacts (164 apps), SMS contents (74), sending SMS (29), phone calls (339). About 25\% show at least 5 behaviors, almost 1\% show 20 or more.
+        \item \textbf{Traffic:} of 3,118 apps with Internet permission, 1,055 had Lumen flows. 54,614 domains contacted, 7,629 belong to advertising and tracking services. Alphabet owns most.
+        \item \textbf{Manual analysis (158 apps)}
+        \begin{itemize}
+            \item Known malware: Triada, Rootnik, SnowFox, Xinyin, Ztorg, Iop, GMobi. Some C2 servers still running.
+            \item Redstone FOTA service: collects about 50 data items, silently installs packages, tracks user installs/removals.
+            \item Adups FOTA app found in 55 brands.
+            \item 612 apps with engineering/factory-mode functions. Some expose unprotected rooting (e.g., secret code \texttt{*\#*\#9527\#*\#*}).
+        \end{itemize}
+        \item \textbf{Consent:} of 6 new devices bought in Spain, 3 showed no privacy policy at all.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item First large-scale study of pre-installed Android software (over 200 vendors).
+        \item Largest real-world firmware dataset analyzed so far (at time of writing).
+        \item Map of supply-chain actors and their relationships, via certificates, TPLs and custom permissions.
+        \item Evidence of PII collection, harmful behavior and malware in pre-installed apps.
+        \item Recommendations: trusted certificates or certificate transparency, documentation of pre-installed apps, better consent.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Dataset not complete across vendors and models. Best-effort collection.
+        \item No reliable way to attribute apps from self-signed certificates.
+        \item No documentation for custom permissions, so analysis was semi-manual.
+        \item \texttt{packages.xml} not collected (privacy), so use of pre-installed services by user apps not seen.
+        \item Mainly static analysis. Dynamic data only for 1,055 packages. Code loading and reflection missed, so results are a lower bound.
+        \item Rooted-device detection not certain. Cannot always tell if malware was pre-installed or installed later.
+        \item Root certificates and libraries left for future work.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Real devices from real users. Covers low-end, non-certified vendors too.
+        \item Combines static analysis, real traffic and manual reverse engineering.
+        \item Shows the supply chain, not just single apps.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Crowd-sourcing bias: users who install such apps, mostly Europe. Samsung and Huawei are a large share of devices.
+        \item Behavioral reports for only 48\% of packages. Odexed apps (likely many vendor apps) are missing. Observation.
+        \item Static results are capabilities, not confirmed leaks. FlowDroid/Amandroid results not validated. No precision or false-positive rate.
+        \item ``Exported'' counts do not check permission checks in code. Confused-deputy exploits left as future work.
+        \item Lumen match uses package name + version + vendor, not file hash.
+        \item Manual analysis covers 158 apps. Many findings are case studies.
+        \item Small inconsistency: SMS contents given as 74 apps in the text and 73 in Table VI.
+        \item Data is from Android 4--9 era. May not reflect current Android.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Automatic check of whether exported components and leaks are actually exploitable (confused deputy).
+        \item Dynamic analysis of pre-installed apps at scale.
+        \item Analysis of root certificates and native libraries.
+        \item Focused study of low-cost devices and regions with weak privacy laws.
+        \item Attribution infrastructure for app signers and custom permissions.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{4 An Investigation of the Android Kernel Patch Ecosystem}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Zheng Zhang, Hang Zhang, Zhiyun Qian, Billy Lau \\[2pt]
+        Publication Year & 2021 (USENIX Security '21, Aug 11--13) \\[2pt]
+        DOI/Link         & \url{https://www.usenix.org/conference/usenixsecurity21/presentation/zhang-zheng}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Kernel patches pass through many layers: Linux mainline $\rightarrow$ LTS $\rightarrow$ Android common $\rightarrow$ Qualcomm mainline $\rightarrow$ Qualcomm stable $\rightarrow$ OEM.
+        \item Ecosystem is decentralized and beyond the control of a single entity. Patch delays can be severe.
+        \item Questions:
+        \begin{itemize}
+            \item Who makes the initial patch and how does it propagate?
+            \item What is the delay at each step, and where is the bottleneck?
+            \item What factors influence propagation, and how can it improve?
+        \end{itemize}
+        \item \textbf{Challenge:} OEM kernel sources are released broken/half-baked, late and only intermittently. Binary ROMs are easier to find, so binary patch testing is needed.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Measurement pipeline} that tracks each CVE's patch from upstream to OEM kernels.
+
+    \begin{itemize}
+        \item \textbf{Three kernel types}
+        \begin{itemize}
+            \item Type 1: git repositories (Linux, Android common, Qualcomm, Pixel).
+            \item Type 2: source snapshots without history (most OEMs).
+            \item Type 3: binary ROMs (most available).
+        \end{itemize}
+        \item \textbf{Crawler:} kernel CVEs, patch commits and repos from the Android Security Bulletin.
+        \item \textbf{Patch locator} (Type 1)
+        \begin{itemize}
+            \item Step 1: match commit subject/message. Step 2: match full source changes. Step 3: match added/removed lines only.
+            \item Handles file and function renames. Manual search as last resort (6.8\% of cases).
+        \end{itemize}
+        \item \textbf{Patch evolution tracker:} collects all later versions of each patched function from Qualcomm mainline (reference kernels).
+        \item \textbf{Source-level matcher} (Type 2): strict whole-function string match against all patched versions. No false positives by design.
+        \item \textbf{E-FIBER} (Type 3): extends FIBER binary patch presence test.
+        \begin{itemize}
+            \item Signatures from multiple function versions (fixes out-of-date signatures).
+            \item Inlined functions: use the caller's code with debug info.
+            \item Compile with GCC and Clang (for 4.14), \texttt{-Os} and \texttt{-O2}, and matching chipset config files.
+        \end{itemize}
+        \item \textbf{Cause analysis:} classify patch operations as cherry-pick (knowing) vs merge/fork (unknowing). Compare with Google and Qualcomm notification dates. Feedback from Google, Qualcomm, Samsung.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{CVEs:} 402 kernel CVEs from the Android Security Bulletin (Aug 2015 -- May 2019), incl. Pixel bulletin. Most link to Linux and Qualcomm.
+        \item \textbf{Targets:} 8 brands (Google Pixel, Samsung, Xiaomi, Huawei, Oppo, OnePlus, Sony, LG), 26 phone models, 701 kernel instances (source or binary). Usually one to two years per model.
+        \item \textbf{ROMs:} mostly from third-party websites (official sites usually give only the latest ROM). Build dates used as patch dates.
+        \item \textbf{Signatures:} 19 config files, 2,488 reference kernels compiled, 11,093 signatures.
+        \item \textbf{Ground truth:} repository results (automated + manual on every CVE and branch).
+        \item \textbf{Accuracy test:} 9 kernels from 4 brands, available as both source and binary. Metrics: TP, TN, FP, FN, accuracy.
+        \item \textbf{Baseline comparison:} Not Specified (only notes that original FIBER's accuracy dropped on 3 years of kernels).
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Accuracy:} average over 96\%. Source: 90.03\% -- 99.72\%. Binary: 91.86\% -- 98.87\%. About 10\% of CVEs excluded from binary tests (no signature or over 2 hours).
+        \item \textbf{Upstream delays (Linux CVEs)}
+        \begin{itemize}
+            \item Linux mainline $\rightarrow$ LTS: 20\% of patches take 100 days or longer. Per version 5\% -- 25\% (3.18 worst).
+            \item Extreme cases: CVE-2017-15868 took 954 days to LTS 3.18. CVE-2019-2215 took about 600 days to LTS 4.4.
+            \item LTS $\rightarrow$ Android common: more than half patched the same day or earlier. 10\% -- 20\% appear in Android common first.
+            \item Android common $\rightarrow$ Qualcomm mainline: 5\% -- 20\% appear in Qualcomm first.
+            \item \textbf{Bottleneck: Qualcomm mainline $\rightarrow$ stable.} For 4.4, about 80\% delayed 100 days or longer and 20\% 200 days or longer. For 4.9, 80\% delayed 60 days or longer.
+            \item End-to-end to Qualcomm stable: majority over 100 days, about 15\% 300 or more.
+        \end{itemize}
+        \item \textbf{Qualcomm CVEs:} more than 60\% of CVEs. Patched much faster in stable branches.
+        \item \textbf{OEM phones}
+        \begin{itemize}
+            \item Qualcomm-specific CVEs: OEMs 100 days or more behind Qualcomm stable for 70 -- 90\% of CVEs.
+            \item End-to-end: more than half of Linux CVEs delayed 200 days or more. 10\% -- 30\% over a year.
+            \item \textbf{Severity:} no clear effect on delay.
+            \item \textbf{Brand} (8 high-end 2017 phones, kernel 4.4): Pixel 2 and Sony best. Xiaomi, Oppo, LG slowest.
+            \item \textbf{High vs low-end:} low-end phones get patches more slowly.
+            \item \textbf{Region:} same phone in different regions mostly patched at the same time (about 10\% differ).
+            \item Redmi 4: firmware updates until March 2019, but no security patches since early 2018.
+        \end{itemize}
+        \item \textbf{Causes}
+        \begin{itemize}
+            \item \textbf{Lack of knowledge:} Linux does not label security fixes. 17 of 37 critical patches initially missed by LTS.
+            \item \textbf{Google:} merges from LTS. Bulletin publication takes 100 to 500 days for most CVEs, 500+ for 20\%. Faster when Google knowingly cherry-picks. Pipeline does not prioritize by severity.
+            \item \textbf{Qualcomm stable:} cherry-pick only. Linux patches often added only when customers ask. Own bulletin delay: median 63 days, mean 130 days.
+            \item \textbf{OEMs:} cherry-pick and fork at OS upgrade. 30\% -- 75\% of CVEs patched through forking. 80\% of Qualcomm CVEs take 100+ days after notification. Over 50\% patched within a month after Google's bulletin.
+        \end{itemize}
+        \item \textbf{Case study (CVE-2019-2215):} fixed in Linux mainline 2/1/2018. Android common cherry-picked it 2/6/2018. Bulletin only 10/5/2019 (18 months). Qualcomm Oreo stable branch never patched (end of life 1/22/2020). Samsung S8 got it only by forking the Pie branch.
+        \item \textbf{Carrier delay:} small sample (T-Mobile, AT\&T), about 20 days from build to release.
+        \item \textbf{Recommendations:} automated security triage, faster knowledge sharing, separate downstream customization so merges can be automatic.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item Study of patch propagation delays across all layers of the Android kernel ecosystem, with the bottleneck located.
+        \item Improved binary patch presence test (E-FIBER) and a system to check closed-source OEM kernels.
+        \item Large-scale measurement: nearly half of CVEs patched on OEM devices 200+ days after the first public patch.
+        \item Causes of delay (knowing vs unknowing patching) and suggested fixes.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Missing patch does not mean vulnerable (function may be customized). So only patched cases are analyzed.
+        \item Delay measured to build date. Carrier certification and user delays out of scope.
+        \item Only Qualcomm. MediaTek, Kirin, Exynos have no full git repos and no patch links.
+        \item Source matcher has false negatives on customized functions.
+        \item About 10\% of CVEs excluded from binary tests.
+        \item Region and carrier analysis based on small samples.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Measures every layer of the chain, not just the OEM end.
+        \item Real patch presence tests in binaries, not trusting the security patch level.
+        \item Explains causes with commit evidence and vendor feedback.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Accuracy checked on only 9 kernels from 4 brands. OnePlus, Sony and LG binaries not directly validated.
+        \item Brand comparison uses one phone per brand. High vs low-end uses two phones of each type.
+        \item Only patched cases counted. CVEs never patched are left out, so delays may be underestimated. Observation.
+        \item Historical ROMs from third-party sites. Missing builds could shift measured patch dates.
+        \item Small inconsistencies: intro says 20+ models and 600+ images, dataset says 26 models and 701 instances. Table 2 counts sum to 400, not 402. Critical CVEs given as 33 and as 37.
+        \item Kernel only. User-space patches not covered. Data ends May 2019.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Patch tracking for MediaTek, Kirin, Exynos (e.g., by firmware reverse engineering).
+        \item Telling ``not patched'' apart from ``not affected''.
+        \item Automatic detection of security-relevant commits upstream.
+        \item Delay until the patch actually reaches users (carriers, OTA).
+        \item Repeat the study on newer kernels and Android versions.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{5 Can We Trust the Phone Vendors? Comprehensive Security Measurements on the Android Firmware Ecosystem}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Qinsheng Hou, Wenrui Diao, Yanhao Wang, Chenglin Mao, Lingyun Ying, Song Liu, Xiaofeng Liu, Yuanzhi Li, Shanqing Guo, Meining Nie, Haixin Duan \\[2pt]
+        Publication Year & 2023 (IEEE Transactions on Software Engineering, vol. 49, no. 7, July 2023). Extension of the ICSE 2022 paper. \\[2pt]
+        DOI/Link         & \url{https://doi.org/10.1109/TSE.2023.3275655}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Android customization and fragmentation bring security risks. Vendors may not follow patches, or may change the patch date without fixing.
+        \item Previous work studies single aspects or builds tools. No panoramic view based on large-scale firmware data.
+        \item Seven questions:
+        \begin{itemize}
+            \item \textbf{Q1:} Do vendors follow AOSP security patches in time?
+            \item \textbf{Q2:} Are vendors' patching claims reliable?
+            \item \textbf{Q3:} How many images contain pre-installed apps with unfixed CVEs?
+            \item \textbf{Q4:} What is the real scope (images, vendors) of a vulnerable pre-installed app?
+            \item \textbf{Q5:} Are ``non-vulnerable'' pre-installed apps secure?
+            \item \textbf{Q6:} Where do potentially vulnerable pre-installed apps come from?
+            \item \textbf{Q7:} Does one vendor's firmware security differ by region?
+        \end{itemize}
+        \item \textbf{Challenges:} linking CVEs to pre-installed apps, patch verification at scale, choosing app security features.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{AndScanner+}, an automated framework with four modules.
+
+    \begin{itemize}
+        \item \textbf{Crawler}
+        \begin{itemize}
+            \item Official vendor sites. For Samsung/Huawei, builds possible URLs by changing parameters of a valid one.
+            \item Small vendors from Android Dumps (checked against own crawled images).
+            \item Collects metadata incl. released region. CVE data from CVE site + NVD (CPE), manually filtered.
+        \end{itemize}
+        \item \textbf{Parser}
+        \begin{itemize}
+            \item Unpacks zip, encrypted ozip (key via ADB from a running system), sparse images (simg2img), vendor formats.
+            \item Extracts from \texttt{build.prop}: fingerprint, Android version, build time, security patch level, model, vendor.
+        \end{itemize}
+        \item \textbf{Patch Analyzer}
+        \begin{itemize}
+            \item \textbf{Patch delay} = build time $-$ security patch level. Counted only if 30 days or more.
+            \item \textbf{Patch missing:} SnoopSnitch's binary patch verification re-implemented in Python. 622 test cases (622 CVEs, 846 patch files, Oct 2015 -- Nov 2022). Ten times faster than the app.
+            \item A patch is ``missing'' if absent but older than the claimed patch level.
+        \end{itemize}
+        \item \textbf{App Analyzer} (Androguard + CryptoGuard)
+        \begin{itemize}
+            \item \textbf{CVE matching:} package name, version, signature, MD5 + check of the vulnerable code or attribute.
+            \item \textbf{Risk detection:} 176 of 191 app CVEs come from attribute misconfiguration (168) or crypto misuse (8). So it checks:
+            \begin{itemize}
+                \item F1 exported components, F2 debuggable, F3 requestLegacyExternalStorage, F4 networkSecurityConfig, F5 allowBackup, F6 sharedUserId.
+                \item High-risk crypto misuse rules from CryptoGuard.
+            \end{itemize}
+            \item App source (AOSP, vendor, third party) from signatures.
+        \end{itemize}
+        \item \textbf{Exploit check:} apps found on own devices, scanned with a drozer-based tool, PoCs built.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Firmware:} 8,325 images, 153 vendors, Android 2.x to 12, built 2012--2023, 14.4 TB.
+        \begin{itemize}
+            \item 6,261 collected Aug -- Nov 2020, 1,000 Feb -- May 2022 (with region), 1,064 Jan -- Feb 2023 (Android 11 and 12).
+            \item All unpacked. 299,908 unique pre-installed apps.
+        \end{itemize}
+        \item \textbf{CVEs:} 813 in total (622 Android official + 191 pre-installed app CVEs).
+        \item \textbf{Setup:} Python and shell, 18,250 lines of code, three servers.
+        \item \textbf{Accuracy:} 50 random patch-missing results manually checked. Only one suspected false positive.
+        \item \textbf{Baseline comparison:} Not Specified (only a speed comparison with the original SnoopSnitch app).
+        \item \textbf{Release:} code and data at \url{https://github.com/chicharitomu14/AndScanner}.
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Q1 Patch delay}
+        \begin{itemize}
+            \item 2,618 of 8,325 images (31.4\%) have at least one month delay. Average of delayed images about 2.5 months.
+            \item Worst: OPPO A33m, 40 months.
+            \item 45.3\% of Xiaomi images delayed. Nokia only 8 of 138. Google none.
+            \item Android 8.0+ (Treble): 22.9\% delayed, 2.1 months. Before 8.0: 58.2\%, 3.2 months.
+            \item Certified partners 0.80 vs non-partners 1.35 months. Non-supported devices 3.81 months.
+            \item Low-end OPPO A57 reached 19 months delay while high-end R9s had none. A57 logs claimed patches, but the patch level did not change.
+        \end{itemize}
+        \item \textbf{Q2 Patch missing}
+        \begin{itemize}
+            \item 466 images (5.6\%) from 50 vendors miss at least one patch. Worst: OPPO R9skt, 46 missing.
+            \item OPPO: 161 images (19.5\%). Nokia and Realme: none.
+            \item Google: 51 images miss one moderate patch (CVE-2017-0494) on four Android 7.x models.
+            \item After STS (Aug 2018), missing patches drop for all top-10 vendors.
+            \item Partners 0.55 vs non-partners 1.13. Supported 0.57 vs non-supported 2.88.
+            \item OPPO A59: 1 missing patch in oldest image, 23 in newest.
+        \end{itemize}
+        \item \textbf{Q3 Unfixed app CVEs:} 475 images (5.7\%) from 71 vendors (46.4\%). Google, Huawei, OnePlus none. Realme worst (89 images), mostly due to \texttt{com.dropboxchmod} (CVE-2018-14996), still present over 19 months after disclosure.
+        \item \textbf{Q4 Scope:} 17 vulnerable apps affect vendors not listed in the CVE. Qualcomm call-enhancement app: 15 undisclosed vendors. \texttt{com.dropboxchmod}: 328 images. Supplier apps spread widest.
+        \item \textbf{Q5 Potential risks}
+        \begin{itemize}
+            \item 5,152 images (61.9\%) from all 153 vendors contain potentially vulnerable apps.
+            \item Realme most (518 apps per image on average, 84.19\% of risky apps from third parties). Huawei least.
+            \item 319 exploitable vulnerabilities submitted. 46 confirmed from 15 vendors, 36 CVE/CNVD IDs.
+            \item Cases: vivo weather provider leaks location (CVE-2021-26279, 109 images). Samsung app with hard-coded AES key. Google telephony provider leaks SIM data, fixed only in Android 13.
+            \item Same bug reported to 9 vendors: 4 confirmed, 4 ignored.
+        \end{itemize}
+        \item \textbf{Q6 Source:} vendors 163,618 (73.9\%), third parties 36,261 (16.4\%), AOSP 21,516 (9.7\%) of potentially vulnerable apps.
+        \item \textbf{Q7 Region:}
+        \begin{itemize}
+            \item Samsung: Latin America longest average delay (20.63 months), Northern America shortest (0.08).
+            \item Huawei: no missing patches in any region.
+            \item Xiaomi: unfixed app CVEs in three regions.
+            \item Samsung SM-G920 (Oct 2020): Brazil 15 months vs Chile 35 months.
+        \end{itemize}
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item Largest Android firmware dataset used for security measurement (8,325 images, 153 vendors, 813 CVEs).
+        \item AndScanner+: automated crawling, parsing, patch analysis and app analysis.
+        \item Answers to seven questions with cause exploration. 46 confirmed new vulnerabilities, 36 with CVE/CNVD IDs.
+        \item Code and data released. Best-practice advice for AOSP, vendors, suppliers and users.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item CVE reports have no standard format. Some lack affected versions, so matching can fail.
+        \item Packed apps cause false positives and negatives (only 0.21\% packed).
+        \item Region information not uniform across vendors. Only large regions compared.
+        \item Patch test cases tied to runtime state were dropped, which may cause false positives.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Checks real patch presence in binaries, not just the claimed patch level.
+        \item Covers both system patches and pre-installed apps. Many vendors, incl. small ones.
+        \item Real impact: confirmed vulnerabilities and CVEs.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item ``Potentially vulnerable'' uses broad signals (e.g., allowBackup, no networkSecurityConfig). The 61.9\% headline is not the same as exploitable. Only 46 confirmed.
+        \item Patch-missing accuracy from only 50 samples. No accuracy given for the App Analyzer (F1--F6, crypto).
+        \item Patch delay = build time $-$ patch level. Does not show when users get the update. The 30-day threshold follows Google's recommendation.
+        \item Exploit checks only on the authors' own devices.
+        \item Small-vendor images come from Android Dumps, a third-party source.
+        \item Data collected in three batches (2020, 2022, 2023). Vendors and versions not evenly covered.
+        \item Region subsets show much higher delays (Samsung 15.45 months) than the full dataset (0.8). Results may reflect device age more than region. Observation.
+        \item Many causes are ``possible reasons'' (e.g., Xiaomi's 2016 sales drop). Not confirmed with vendors.
+        \item Small inconsistency: unique pre-installed apps given as 270,195 and as 299,908.
+        \item Overlaps heavily with the ICSE 2022 version (also in our reading list).
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Turn ``potential'' risks into confirmed ones at scale (e.g., automatic exploit or reachability checks).
+        \item Kernel and vendor-blob patch checks together with app analysis.
+        \item Measure what users actually receive, not build dates.
+        \item Ground-truth accuracy for misconfiguration and crypto detection.
+        \item Why vendors miss patches: needs vendor-side data.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{18 FirmScope: Automatic Uncovering of Privilege-Escalation Vulnerabilities in Pre-Installed Apps in Android Firmware}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Mohamed Elsabagh, Ryan Johnson, Angelos Stavrou, Chaoshun Zuo, Qingchuan Zhao, Zhiqiang Lin \\[2pt]
+        Publication Year & 2020 (USENIX Security '20, Aug 12--14) \\[2pt]
+        DOI/Link         & \url{https://www.usenix.org/conference/usenixsecurity20/presentation/elsabagh}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Pre-installed apps run with high privileges (often as \texttt{system}) and users cannot remove them.
+        \item Design or coding mistakes allow confused-deputy attacks: an unprivileged app abuses a privileged pre-installed app.
+        \item Existing taint tools (FlowDroid, Amandroid, DroidSafe) are too imprecise or too slow for real firmware apps.
+        \item Challenges:
+        \begin{itemize}
+            \item \textbf{C1:} tracking flows through (nested) class fields.
+            \item \textbf{C2:} full object-sensitivity is too expensive.
+            \item \textbf{C3:} modeling Android framework APIs.
+            \item \textbf{C4:} asynchronous callbacks.
+            \item \textbf{C5:} inter-component communication (ICC).
+        \end{itemize}
+        \item \textbf{Threat model:} only externally invokable behavior counts. Anything triggered through the app's GUI is trusted. Kernel and framework out of scope.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{FirmScope}: static taint analysis system for pre-installed apps. Context-, flow-, field-sensitive, partially object-sensitive.
+
+    \begin{itemize}
+        \item \textbf{Preprocessing}
+        \begin{itemize}
+            \item Unpacks many image formats (SIMG, SDAT, Huawei UApp, HTC RUU, Sony .sin, header stripping).
+            \item Extracts DEX, ODEX, VDEX, OAT, JAR and APK files and converts them to canonical APKs (Oat2dex, Baksmali).
+            \item Lifts Smali to a custom three-address IL. Reads manifest for exported components and permissions.
+        \end{itemize}
+        \item \textbf{Static taint analysis}
+        \begin{itemize}
+            \item Builds inter-procedural CFGs with class hierarchy and call resolution.
+            \item Field-aware Def-Use analysis, then inter-procedural data-flow graphs (IDFGs).
+            \item Field flows can cross method boundaries, which covers callback orderings without dummy main methods.
+            \item Partial object-sensitivity by type-compatibility checks on a per-path call stack.
+            \item Framework modeled only for classes that carry data (under 1,000 lines). Simple ICC target recovery.
+            \item Taint tracking = path finding in the graph. Path-insensitive.
+        \end{itemize}
+        \item \textbf{Detection rules} (YAML): command injection, app (un)installation, code injection, factory reset, SMS injection, audio/screen recording, log leakage, AT command injection, wireless and system settings modification.
+        \item \textbf{Implementation:} 37 KSLOC (Cython, Python, C/C++) + 1.6 KSLOC shell. graph-tool.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Firmware:} 2,017 stock images, Android 4.0--9.0, more than 100 vendors (incl. top 20).
+        \item \textbf{Apps:} 331,342 (15,144 unique package names, 39,541 unique versions).
+        \item \textbf{Versions:} v4 19\%, v5 14\%, v6 22\%, v7 23\%, v8 17\%, v9 4\%.
+        \item \textbf{Setup:} three servers (Xeon E5-2630 v4, 40 cores, 150 GiB RAM, Ubuntu 18.04).
+        \item \textbf{Benchmarks:} DroidBench 2.0 (100 positives, 20 negatives) and DIALDroid-Bench (30 real apps, 30 min timeout).
+        \item \textbf{Baseline comparison:} FlowDroid v2.0 (no IccTA), Amandroid v3.1.1, DroidSafe (June 2016 version).
+        \item \textbf{Real-world FP check:} worst-case estimate from DroidBench FPs, and manual check of 400 findings (Android 7--9).
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Vulnerabilities:} 850 unique (3,483 total) in 1,547 firmware (77\% of images).
+        \begin{itemize}
+            \item Command injection most common: 1,420 total, 211 unique, 41\% of firmware.
+            \item Wireless settings modification: 901 total, 212 unique, 26\%.
+            \item Others: SMS injection, screen recording, factory reset, app (un)installation, logcat leakage, microphone recording, AT command and code injection.
+        \end{itemize}
+        \item \textbf{AOSP vs vendor:} 92\% of vulnerabilities in vendor apps (375 packages), 8\% in AOSP apps (18 packages).
+        \item Google and Motorola (near-vanilla): no command/code execution weaknesses.
+        \item Peak around Android 5 and 6 (ADUPS, diagnostic apps). Small peak at 8 from chipset vendor apps shared by up to 19+ device vendors.
+        \item \textbf{Case studies:}
+        \begin{itemize}
+            \item Asus \texttt{SplendidCommandAgent}: exported bound service runs any command as \texttt{system}.
+            \item LovelyFont apps: hidden C\&C channel over HTTP, command and arbitrary DEX code execution as \texttt{system}. Found on Tecno, Infinix, Lava, ASUS, Coolpad and others.
+        \end{itemize}
+        \item \textbf{DroidBench:} FirmScope 7 FP / 11 FN. FlowDroid 10 / 24, Amandroid 20 / 30, DroidSafe 28 / 15.
+        \item \textbf{False discoveries:} worst-case 451 of 3,483 (12.95\%). Manual sample of 400: less than 9\%.
+        \item \textbf{Speed:} 2X faster than FlowDroid, 24X faster than Amandroid and DroidSafe on DroidBench. On DIALDroid-Bench, FirmScope finished all 30 apps (max 12 min). FlowDroid timed out on 12, Amandroid 9, DroidSafe 25.
+        \item \textbf{Runtime:} about 37 days for all images. 4,901 s per firmware, 424 s per app on average.
+        \item \textbf{Disclosure:} 370+ vulnerabilities reported (Android 7--9), 147 CVEs so far.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item FirmScope: scalable system to find privilege escalation in pre-installed apps.
+        \item Efficient on-demand context-, flow-, field-sensitive, partially object-sensitive taint analysis.
+        \item Large evaluation: over 2,000 firmware, 3,000+ vulnerabilities.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Reflection only partly handled (not nested or native reflection).
+        \item Containers not modeled (whole container gets tainted). Exception semantics not fully modeled.
+        \item Path-insensitive.
+        \item No automatic PoC generation. Vendors wanted PoCs, which were built by hand.
+        \item Privacy leaks, kernel and framework bugs out of scope.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Very large real-world scale with many confirmed CVEs.
+        \item Clear threat model focused on exploitable privilege escalation.
+        \item Compared against three well-known tools on public benchmarks.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Baseline tools are old versions (FlowDroid v2.0 without IccTA, DroidSafe from 2016). Results may favor FirmScope.
+        \item Real-world precision only estimated: worst-case from DroidBench patterns and a 400-finding sample. No real-world recall.
+        \item Benchmark comparison is on small apps (DroidBench). Authors themselves say these metrics may not reflect real-world performance.
+        \item Exploitability confirmed only for disclosed cases. Most of the 3,483 findings not exploited.
+        \item Assuming all GUI-triggered actions are trusted may miss UI-based tricks (e.g., tapjacking). Observation.
+        \item Android 9 is only 4\% of the dataset. Newer versions not covered.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Automatic exploit (PoC) generation for taint findings.
+        \item Native code and reflection-heavy apps.
+        \item Analysis of newer Android versions and vendor fixes over time.
+        \item Combining pre-installed app analysis with kernel/framework issues.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{19 Beneath the Surface: An Analysis of OEM Customizations on the Android TLS Protocol Stack}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Vinuri Bandara, Stijn Pletinckx, Ilya Grishchenko, Christopher Kruegel, Giovanni Vigna, Juan Tapiador, Narseo Vallina-Rodriguez \\[2pt]
+        Publication Year & 2025 (IEEE EuroS\&P, early release). Venue taken from the file name; not printed in the PDF. \\[2pt]
+        DOI/Link         & Not Specified. Artifacts: \url{https://github.com/OEM-customization/}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item OEMs can modify the Android TLS stack: JSSE, JCE (Conscrypt, OkHttp, BouncyCastle), JCA (BoringSSL) and the root CA store.
+        \item Google's CDD and CTS aim to keep devices compatible, but it is unclear if they stop insecure changes.
+        \item Prior work ignored OEM customizations of the TLS stack.
+        \item Research questions:
+        \begin{itemize}
+            \item \textbf{RQ1:} What TLS customizations do OEMs apply, and what are the security implications?
+            \item \textbf{RQ2:} Do they affect user-installed apps?
+            \item \textbf{RQ3:} Are CDD and CTS effective at ensuring TLS API consistency?
+        \end{itemize}
+        \item \textbf{Threat model:} network adversaries (downgrade, interception) and malicious apps. Threats TN1 (outdated components), TN2 (weak/missing encryption), TN3 (insecure endpoint validation), TA1 (app-level exploits).
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Differential code analysis (diffing)} of OEM TLS components against the matching AOSP baseline.
+
+    \begin{itemize}
+        \item \textbf{Image collection:} FirmwareScanner (crowd-sourced app) + Android Dumps. Rooted devices excluded.
+        \item \textbf{Baseline identification}
+        \begin{itemize}
+            \item Map BUILD\_ID in the build fingerprint to an AOSP release.
+            \item 58\% of devices have BUILD\_IDs not matching known releases. Fallbacks: OEM-claimed version, compile dates.
+            \item Validated with \texttt{build.prop} from 8,573 devices: only 12 (0.14\%) conflicting.
+        \end{itemize}
+        \item \textbf{Java diffing} (JSSE, JCE): decompile to Smali (baksmali, oat2dex). Detect added/removed functions and changed logic. Handle obfuscation (seen in 12\% of samples).
+        \item \textbf{Binary diffing} (JCA): IDA Pro + Diaphora. Export-symbol diff and control-flow diff (manual check if 5+ blocks differ).
+        \item \textbf{Root store diffing:} OpenSSL toolkit on 68,385 X.509 certificates vs AOSP 9--14. Cross-checked with news, AOSP logs, Mozilla.
+        \item \textbf{Taxonomy:} CONN, ACP, CFC, CryptP, TRS, CertM, EV.
+        \item \textbf{App impact:} static search of 20k Google Play apps for calls to customized APIs. PoC for one finding.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Images:} 53,189 devices, 16,789 models, 370 OEMs, Android 9--15 (covers 91.69\% of the market). Android Dumps adds 1,925 images (Android 12--14).
+        \item \textbf{Binaries:} 1,034 unique (908,338 total) binary objects.
+        \item \textbf{Apps:} 20k Google Play apps.
+        \item \textbf{Ground truth:} \texttt{build.prop} (available for 16\% of devices) used to validate baselines only.
+        \item \textbf{Metrics:} counts of customized APIs, models and OEMs per category. CDD violation rates.
+        \item \textbf{Baseline comparison:} Not Specified.
+        \item \textbf{Ethics:} IRB approved. IMEI stored as MD5 hash.
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Overall:} 80\% of OEMs modify at least one model. 1,144 customized TLS APIs/functions (absent, added or changed).
+        \item Google-certified OEMs mostly keep JSSE signatures. All OEMs change lower layers (JCE, JCA). Non-certified OEMs change all layers.
+        \item \textbf{Connection management:} 15.4\% of OEMs modify connection functions (OkHttp 13.2\%, Conscrypt 3.5\%).
+        \begin{itemize}
+            \item MIUI's OkHttp \texttt{isCleartextTrafficPermitted} always returns true in a likely exception path. Ignores developers' clear-text blocking. Reported to Google, escalated to Xiaomi.
+            \item Some models keep SSLv3 fallback support or miss newer TLS configuration and ALPN functions.
+        \end{itemize}
+        \item \textbf{Alternative providers:} Oppo, Realme, Alps ship OpenSSL 1.0.1j / 1.0.1e (over 60 known vulnerabilities). LGE/HTC add Libgcrypt. Samsung adds Knox libraries.
+        \item \textbf{Crypto:} over 180 models (36 OEMs) customize BoringSSL. Some lack TLS 1.3 AES-GCM, ECH GREASE, AES-GCM-SIV or HPKE functions.
+        \item \textbf{Conscrypt JNI:} \texttt{libjavacrypto.so} in 30 OEM devices still vulnerable to CVE-2016-6709, incl. Google-certified models.
+        \item \textbf{Root store:} 274 OEMs add or remove certificates.
+        \begin{itemize}
+            \item Alps Android 9: 84 non-AOSP certificates, 18 already expired at release, incl. TrustCor.
+            \item 117 OEMs include 69 AOSP-removed certificates. In 85\%, they persist in later versions.
+            \item Two Comodo certificates (removed after Android 8) remain in 116 OEMs.
+        \end{itemize}
+        \item \textbf{Certificate management:} 12 OEMs remove functions for pinning, blocklisting, OCSP, SCT or chain checks.
+        \item \textbf{Endpoint verification:} 1,721 models with varying implementations (e.g., missing hostname verifier or DNS override).
+        \item \textbf{Apps:} over 75\% of 20k apps use at least one modified or missing TLS function.
+        \begin{itemize}
+            \item Certificate check (JSSE \texttt{X509Certificate.verify}) and OkHttp \texttt{Response.handshake} used by 73\%.
+            \item Mintegral SDK affected by the MIUI bug.
+            \item Temple Run 2, ShareChat, Citibank handle missing APIs correctly.
+        \end{itemize}
+        \item \textbf{Patching:} incomplete TLS updates in 2,539 models (16\%) from 85 OEMs. E.g., Samsung A50/A70 miss 33 Conscrypt updates.
+        \item \textbf{CDD (Google-certified only):} 85\% of OEMs fail to maintain the trust store. At least 9\% report inconsistent versions. 27\% violate API restrictions.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item First large-scale analysis of OEM TLS stack customizations.
+        \item Taxonomy and threat mapping of customizations.
+        \item Evidence of impact on real apps and SDKs.
+        \item Evidence that CDD/CTS do not stop security-degrading changes. Suggestions: stronger CTS, regulation (EU CRA), transparency.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Crowd-sourced, black-box approach limits scope and depth.
+        \item Android 15 under-represented.
+        \item Baselines are best-effort and can be wrong if OEMs misreport build data.
+        \item Some components could not be decompiled (corruption, obfuscation, missing dependencies).
+        \item Native libraries analyzed only via symbols, strings and file names.
+        \item Manual focus on functions most likely to affect security.
+        \item App analysis gives examples, not a systematic dependency study. Native-library CDD rules out of scope.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Huge dataset (53K devices, 370 OEMs) covering most of today's market.
+        \item Covers all TLS layers, from Java APIs down to BoringSSL and root store.
+        \item Links findings to real apps and a confirmed, reported bug.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item ``Missing function'' is not the same as exploitable. Only one PoC (MIUI clear-text). Most security impacts are argued, not tested.
+        \item ``75\% of apps use a modified function'' does not mean these apps run on affected devices or call the function in a risky way.
+        \item Headline ``80\%'' is stated for models in the abstract but for OEMs in the results. Unclear which.
+        \item Baseline errors possible: 58\% of BUILD\_IDs do not map to releases.
+        \item Unclear if the 1,925 Android Dumps images are inside the 53,189 total.
+        \item Reasons for customizations (legacy, prioritization, regional) are inferred, not confirmed with OEMs.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Dynamic testing of TLS behavior on real devices for each customization.
+        \item CTS tests that check TLS security and root store consistency.
+        \item Systematic app reachability analysis of affected APIs.
+        \item Same diffing approach for other security-critical subsystems.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{20 The Doom of Device Drivers: Your Android Device (Most Likely) has N-Day Kernel Vulnerabilities}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Lukas Maar, Florian Draschbacher, Lorenz Schumm, Ernesto Mart\'inez Garc\'ia, Stefan Mangard \\[2pt]
+        Publication Year & 2025 (USENIX Security '25, Seattle, Aug 13--15) \\[2pt]
+        DOI/Link         & \url{https://www.usenix.org/conference/usenixsecurity25/presentation/maar-doom}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Recent Android exploits attack GPU drivers directly from untrusted apps (4 of 5 compromises in Google's 2023 review).
+        \item Google focused on GPU hardening. Are other kernel drivers reachable from untrusted apps just as risky?
+        \item Exploitation criteria: \textbf{C1} accessible from untrusted context, \textbf{C2} broad impact, \textbf{C3} susceptible to vulnerabilities.
+        \item \textbf{Threat model:} attacker already has code execution in \texttt{untrusted\_app} (e.g., via Chrome) and wants kernel control with minimal effort, using n-days instead of zero-days.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Three analyses}: attack surface, n-day reconstruction, patch inclusion.
+
+    \begin{itemize}
+        \item \textbf{Attack surface (mostly automated)}
+        \begin{itemize}
+            \item Extract SELinux policy files (precompiled policy and vendor file contexts) and query them with \texttt{sesearch}.
+            \item Extract RC scripts for Linux DAC permissions.
+            \item Find pivot contexts (e.g., via Binder and shared file descriptors).
+            \item Match \texttt{/dev} and \texttt{/proc} nodes to kernel modules (from \texttt{vendor\_dlkm} or ramdisk). Check \texttt{modules.load}.
+            \item Validate with an unprivileged test app on 15 devices.
+        \end{itemize}
+        \item \textbf{N-day reconstruction}
+        \begin{itemize}
+            \item Keyword search (bug, use-after-free, out-of-bounds) in public driver git repos (2020 -- Dec 2024) + bug reports.
+            \item Manual confirmation of security fixes. Classified as UAF, OOB write, Others, ID.
+        \end{itemize}
+        \item \textbf{Patch inclusion (semi-automated)}
+        \begin{itemize}
+            \item Symbol/string detection (new symbols or unique strings from the patch).
+            \item Control-flow diff between driver versions, Ghidra decompilation, manual comparison.
+        \end{itemize}
+        \item \textbf{Dynamic check:} trigger 5 DSP driver n-days on a rooted Galaxy S23 by swapping in driver modules from 13 devices (same chipset).
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Firmware:} 493 images for 131 devices (of 488 released Oct 2022 -- Dec 2024) from 7 OEMs (Samsung, Xiaomi, Vivo, Oppo, Realme, OnePlus, Asus). Over 75\% market share. ODMs: Qualcomm, MediaTek, Samsung.
+        \item Version lineages only for Samsung and Xiaomi. Others: latest available firmware.
+        \item \textbf{Vulnerabilities:} 50 reconstructed (45 from git, 7 from bug reports, 2 duplicates) in 7 drivers. Patch check for 21 of them (DSP, JPEG, GED drivers).
+        \item \textbf{Validation:} static access results checked on 15 devices (5 Qualcomm, 6 MediaTek, 4 Samsung ODM). Dynamic triggering on 29 module versions from 13 devices.
+        \item \textbf{Ground truth:} Not Specified (static results cross-checked with dynamic subset).
+        \item \textbf{Baseline comparison:} Not Specified.
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Attack surface:} besides GPUs, 11 drivers reachable from untrusted apps, e.g., DSP (\texttt{/dev/adsprpc-smd}), JPEG decoder, AI/NPU, GED, perf monitor, secure memory. Static results matched runtime on all tested devices.
+        \item \textbf{N-days:} 50 vulnerabilities. Most common UAF (16), then ID (14), Others (11), OOB write (9). \texttt{frpc-adsprpc.ko} has 19.
+        \item \textbf{Susceptibility:} 61.4\% of devices have at least one n-day. 59.1\% have at least one highly critical (UAF/OOB).
+        \begin{itemize}
+            \item Samsung 45.5\%, Xiaomi 71.4\% (74.1\% and 79.5\% when counting only devices with the target drivers).
+            \item 29.5\% of Samsung and 49\% of Xiaomi devices have 3 or more n-days.
+        \end{itemize}
+        \item \textbf{Patch delay (lower bound):} up to 830 days. UAF/OOB can take over 500 days, ID over 800 days.
+        \begin{itemize}
+            \item MediaTek over 2 times slower than Qualcomm (e.g., UAF about 4 months vs over 8 months).
+            \item Samsung usually faster than Xiaomi.
+        \end{itemize}
+        \item \textbf{Practice:} OEMs mostly fix flaws by releasing new devices, not by updating old ones (strongest for Xiaomi).
+        \item \textbf{PoCs:} reusable across OEMs. Samsung patched in 0--7 months. All tested Xiaomi and Asus releases still vulnerable at analysis time.
+        \item \textbf{Disclosure:} Samsung started patching. Asus, Realme, MediaTek acknowledged. Google said it is out of scope and referred them to OEMs.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item First large analysis of kernel drivers reachable from untrusted apps (11 beyond GPU).
+        \item Reconstruction of 50 driver n-days.
+        \item Semi-automated patch inclusion analysis: 59.1\% of devices exposed to highly critical n-days.
+        \item Insights on patch timelines across OEMs, ODMs and bug types.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Mostly static. No full end-to-end exploit.
+        \item Only a subset of drivers and devices. Results are estimates of real exploitability.
+        \item Patch delays are lower bounds (gaps of months between firmware).
+        \item No public repos for some drivers (Samsung NPU, camera; Xiaomi migt). Exynos excluded from ODM comparison.
+        \item Fiber-like tools not adapted to kernel modules (future work).
+        \item Datasets and tools not open-sourced (misuse risk).
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Shows that GKI did not solve patch delays for vendor driver modules.
+        \item Recent devices (2022--2024) and recent vulnerabilities.
+        \item Static results validated with real devices and triggered PoCs.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Patch presence tested for only 21 of 50 vulnerabilities, in three drivers. Headline 59.1\% depends on this subset.
+        \item Every UAF/OOB is treated as critical without showing exploitability. Authors argue for this, but it inflates severity. Observation.
+        \item PoCs run on one rooted S23 with swapped driver modules, not on the original devices.
+        \item Lineages only for Samsung and Xiaomi. OEM comparisons not directly fair (authors note this).
+        \item Vulnerability search depends on commit keywords. Silent security fixes may be missed.
+        \item No released data or tools, so results cannot be reproduced.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Automated binary patch detection for GKI kernel modules (extend FIBER-like tools).
+        \item Tighter SELinux policies to shrink driver exposure.
+        \item Exploitability ranking of driver n-days.
+        \item Faster update paths for vendor driver modules on existing devices.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{21 Too Quiet in the Library: An Empirical Study of Security Updates in Android Apps' Native Code}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Sumaya Almanee, Arda \"Unal, Mathias Payer, Joshua Garcia \\[2pt]
+        Publication Year & 2021 (ICSE 2021). Venue taken from the file name; not printed in the PDF. \\[2pt]
+        DOI/Link         & Not Specified
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Android apps bundle third-party native libraries (e.g., FFmpeg, OpenSSL) for speed and reuse.
+        \item Developers often do not update them, so known vulnerabilities stay for years.
+        \item Native code has memory bugs that are easy to exploit.
+        \item Prior studies looked only at Java libraries, not native ones.
+        \item \textbf{Key difficulty:} identifying native libraries and versions when developers rename or strip them.
+        \item Questions: \textbf{RQ1} accuracy of version identification, \textbf{RQ2} prevalence of vulnerable libraries, \textbf{RQ3} patch response time.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{LibRARIAN}: identifies a native library and its version from the binary.
+
+    \begin{itemize}
+        \item \textbf{Features:} five ELF metadata features (exported/imported functions, exported/imported globals, dependencies) + version identification strings from \texttt{.rodata}.
+        \item \textbf{bin2sim:} Jaccard similarity of feature sets. Match if above 0.85. Ties broken by hash.
+        \item \textbf{Version strings:} per-library regex heuristics (e.g., \texttt{ffmpeg-x.y}). Used as fallback for low scores or to confirm.
+        \item Removes architecture noise and standard-library calls. Uses angr's ELF parser.
+        \item \textbf{Study:} map identified versions to CVEs. Track when apps update or remove vulnerable libraries.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Apps:} top 200 free Google Play apps, 7,678 versions from AndroZoo (Sept 2013 -- May 2020).
+        \item 145 of 200 apps (72.50\%) have native libraries. 66,684 \texttt{.so} files (average 11 per app, max 141 in one Instagram version).
+        \item \textbf{Ground truth:} 46 libraries, 904 versions (official sites, GitHub, Debian).
+        \item \textbf{Baseline comparison:} OSSPolice, using its published numbers (tool could not be run).
+        \item \textbf{RQ2:} 7,253 binaries with inferred versions (10.87\%), limited to libraries in more than 10 apps with known CVEs.
+        \item \textbf{RQ3:} 40 apps with vulnerable FFmpeg, GIFLib, OpenSSL, WebP, SQLite3, OpenCV, Jpeg-turbo, Libpng, XML2.
+        \item \textbf{Setup:} 2 AMD EPYC 7551, 512GB RAM. Average 118.19 s per library version detection.
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Accuracy:} 824 of 904 (91.15\%) versions correct. Misidentification (8.85\%) mostly between consecutive minor versions.
+        \item \textbf{vs OSSPolice:} 63/67 (94\%) vs 55/67 (82\%) on OSSPolice's dataset.
+        \item \textbf{Features:} 37.42\% of binaries inferable only by version strings, 45.29\% only by metadata, 17.29\% need both. Exported functions contribute 58.25\%, imported functions 32.98\%.
+        \item \textbf{Prevalence:} 3,674 of 7,253 binaries (50.65\%) vulnerable. 53 of 200 apps (26.5\%) had a vulnerable library. 14 apps still vulnerable, outdated by $859.17 \pm 137.55$ days on average.
+        \item OpenSSL: most vulnerable versions (22) in 13 apps. OpenCV: most apps (21), often via card.io. XML2 2.7.7 in Xbox SmartGlass for 6 years.
+        \item Examples: Facebook Messenger (OpenSSL 1.1.0), Amazon Kindle (XML2 2.7.7, Libpng 1.6.7), DoorDash (GIFLib 5.1.4).
+        \item \textbf{Patch speed:} library developers patch in $54.59 \pm 8.12$ days. App developers apply in $528.71 \pm 40.20$ days (10 times slower).
+        \item Slowest: Xbox 5.4 years. Fastest: Instagram 267 days. Most neglected library: XML2 (1830 days). Least: WebP (213.40 days).
+        \item \textbf{Case study:} XRecoder uses FFmpeg 3.1.11 (CVE-2018-14394). Vulnerable function shown reachable (crash).
+        \item Developer replies sometimes blame other libraries (e.g., Discord waiting on Fresco).
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item LibRARIAN and the bin2sim metric for native library version identification.
+        \item Longitudinal study (7 years) of vulnerable native libraries in top apps.
+        \item Dataset, platform and results released.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Only top 200 apps (Google Play limit).
+        \item Unknown libraries not in the known set get matched to the closest one.
+        \item AndroZoo timestamps may lag (max 9 days).
+        \item Vulnerability labels come from CVE data.
+        \item Exploitability shown for one app only. Full native reachability analysis is an open problem.
+        \item Developers might patch manually without changing the version. Patch-level versions identified correctly for 61.21\%.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Simple, scalable version identification that does not need source code.
+        \item Long time span and very popular apps make the findings relevant.
+        \item Clear comparison of library vs app patch speed.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item ``Vulnerable'' is based on version only. Reachability checked in detail for one app (XRecoder), which is not shown to be in the top 200. For others, only ``exported and loaded'' was checked.
+        \item OSSPolice comparison uses published numbers, not a rerun on the same setup.
+        \item RQ2 covers only 10.87\% of binaries, so the 26.5\% is a lower bound. Observation.
+        \item RQ3 excludes apps still vulnerable, so the 528-day average likely underestimates delay.
+        \item Small inconsistencies: conclusion says 7,253 app versions (it is binaries; versions are 7,678). Std dev given as $\pm40.20$ and $\pm41.20$. RQ3 says 40 apps, Table VI lists 15.
+        \item Covers Play apps only. Pre-installed apps with native libraries not studied.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Cross-language (Java to native) reachability of vulnerable functions.
+        \item Same study for pre-installed and system apps in firmware.
+        \item Automatic native library updates with regression testing.
+        \item Developer surveys on why native libraries are not updated.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{22 Semantic-Enhanced Static Vulnerability Detection in Baseband Firmware}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Yiming Liu, Cen Zhang, Feng Li, Yeting Li, Jianhua Zhou, Jian Wang, Lanlan Zhan, Yang Liu, Wei Huo \\[2pt]
+        Publication Year & 2024 (ICSE 2024, Lisbon, April 2024) \\[2pt]
+        DOI/Link         & \url{https://doi.org/10.1145/3597503.3639158}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item Baseband firmware runs cellular protocols. Bugs can allow remote code execution with no user interaction.
+        \item Protocols are message-centric: a common phase (queue, decode) and a message-specific phase (handle each message type).
+        \item Message-specific phase holds most code (99.67\% of basic blocks) and most vulnerabilities (74\%), but is under-studied.
+        \item Fuzzers cannot easily reach it (need long message sequences and setup). Static tools (BaseSpec, BaseComp) focus on the common phase.
+        \item \textbf{Challenges:} find which binary variables carry attacker-controlled message fields; taint stops at unresolved indirect calls.
+        \item \textbf{Threat model:} fake base station or malicious operator sends any over-the-air message.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Empirical study first}, then the \textbf{BVFinder} static taint detector.
+
+    \begin{itemize}
+        \item \textbf{Study:} 225 baseband vulnerabilities (Qualcomm, MediaTek, Samsung bulletins, 2015 -- present). 95 message-specific. 12 analyzable in depth.
+        \begin{itemize}
+            \item Pattern: attacker-controllable input + sensitive memory operation (memory functions or loop parsing).
+            \item High locality: analyzing only the message-specific phase is enough.
+        \end{itemize}
+        \item \textbf{Semantic-based taint source identification}
+        \begin{itemize}
+            \item Collect output variables of common-phase functions (offsets given as input).
+            \item \textbf{Message type match:} Jaccard similarity between log strings/function names and 3GPP message descriptions (threshold $k = 0.8$).
+            \item \textbf{Data type match:} addressing patterns must look like a leaf member of a struct/array.
+        \end{itemize}
+        \item \textbf{Enhanced taint propagation:} resolve indirect calls by tracking hard-coded function addresses with inter-procedural data flow.
+        \item \textbf{Sinks:} \texttt{memcpy}-like calls with tainted size and no size check; loops with tainted control variables.
+        \item \textbf{Implementation:} about 4.3k lines Java/Python on Ghidra, BinAbsInspector, nltk, BaseSpec's 3GPP data.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{RQ1 (comparison):} 11 known message-specific vulnerabilities in three firmware images.
+        \begin{itemize}
+            \item Images: G9250CHC1BOGB, G930FXXU1APB4 and MT6762.
+            \item CVE-2010-3832 excluded (Qualcomm Hexagon ISA not supported).
+        \end{itemize}
+        \item \textbf{Baseline comparison:} BaseSpec (results taken from its paper) and FirmWire (24 h fuzzing per task).
+        \item \textbf{RQ2 (ablation):} G930FXXU1APB4. Variants INIT, STI, ETP, ALL. Ground truth from manual marking of the union of 1,547 results (one man-month): 74 TPs.
+        \item \textbf{RQ3 (real world):} latest firmware of Galaxy A50, Galaxy S10 (Samsung) and Galaxy A10s (MediaTek).
+        \item \textbf{Metrics:} TP, FN, TP rate, time.
+        \item \textbf{Setup:} Intel i7-11700, 128GB RAM.
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Study:} 74\% (95/128) of typed vulnerabilities are message-specific. About 65\% (62/95) are memory safety issues.
+        \item \textbf{Comparison:} BVFinder found all 11. BaseSpec 3, FirmWire 6.
+        \item \textbf{Ablation (FUNC + LOOP):}
+        \begin{itemize}
+            \item BVFinder-ALL: 58 TPs (35.4\% TP rate), 16 FN (21.6\%).
+            \item INIT: 12 TPs (3.3\%), 62 FN (83.8\%). ETP alone: 76 TPs (4.8\%), 0 FN.
+            \item Source identification raises TP rate. Enhanced propagation lowers FN.
+            \item Higher $k$ gives higher TP rate but more FN. $k = 0.4$ suggested for balance.
+        \end{itemize}
+        \item \textbf{Real world:} 153 results (33 FUNC, 120 LOOP). 4 zero-days, 4 CVEs, 12,410 USD bounty.
+        \begin{itemize}
+            \item CVE-2023-21503, CVE-2023-21494, CVE-2023-21504: buffer overflows, High, possible RCE (Samsung Shannon).
+            \item CVE-2022-25821: out-of-bounds read, Low.
+        \end{itemize}
+        \item FirmWire found no new bugs in 7 days on the same firmware.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item First empirical study of message-specific baseband vulnerabilities.
+        \item BVFinder with semantic taint source identification and enhanced taint propagation.
+        \item Comparison with state of the art and ablation study.
+        \item Four zero-days found and fixed. Dataset and prototype released.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Study limited by little public information (12 of 95 analyzable).
+        \item False positives from empirical patterns (checks inside loop bodies missed) and static analysis limits (distant guard checks).
+        \item Only memory safety. Logic bugs (replay, downgrade, IMSI catching; 34.7\%) not covered.
+        \item Manual reverse engineering may contain errors.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Targets a real gap: deep message handling code that fuzzers rarely reach.
+        \item Ablation study clearly shows each component's effect.
+        \item Real zero-days with CVEs and bounty.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Only Samsung and MediaTek. Qualcomm Hexagon not supported, though 186 of 225 studied vulnerabilities are Qualcomm.
+        \item ``Detects all existing vulnerabilities'' means 11 known cases. In the ablation, BVFinder-ALL still misses 16 of 74.
+        \item Low precision: 35.4\% TP rate. LOOP results especially noisy (2 TPs in ablation; 120 LOOP results in real-world run).
+        \item Ground truth = union of tools' outputs. Bugs none of them report are not counted, so recall is overestimated.
+        \item Same firmware used to tune $k$ and to evaluate. Possible overfitting.
+        \item BaseSpec numbers copied from its paper, not rerun.
+        \item Abstract says ``three to four times'' more detections, but vs FirmWire it is 11 vs 6.
+        \item Needs common-phase function offsets as manual input.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Qualcomm Hexagon baseband support.
+        \item Logic bug detection in message handling.
+        \item Better sink patterns (loop bodies, distant checks) to reduce FPs.
+        \item Combine static candidates with targeted fuzzing to confirm bugs.
+    \end{itemize}
+
+\end{enumerate}
+
+\newpage
+
+\section{23 A Thorough Security Analysis of BLE Proximity Tracking Protocols}
+
+\begin{enumerate}
+
+    % ---------- 1 ----------
+    \item \entrypart{Paper Details}
+
+    \begin{tabular}{@{}>{\bfseries}p{3.2cm} p{11.5cm}@{}}
+        Authors          & Xiaofeng Liu, Chaoshun Zuo, Qinsheng Hou, Pengcheng Ren, Jianliang Wu, Qingchuan Zhao, Shanqing Guo \\[2pt]
+        Publication Year & 2025 (USENIX Security '25, Seattle, Aug 13--15) \\[2pt]
+        DOI/Link         & \url{https://www.usenix.org/conference/usenixsecurity25/presentation/liu-xiaofeng}
+    \end{tabular}
+
+    % ---------- 2 ----------
+    \item \entrypart{Research Problem}
+
+    \begin{itemize}
+        \item BLE proximity tracking (Apple Find My, Samsung Find My Mobile) finds tags using nearby phones. Millions of AirTags and SmartTags sold.
+        \item Prior studies focus on one participant or lack formal guarantees.
+        \item Samsung's protocol is closed-source with no public documentation.
+        \item Security goals: confidentiality, authenticity, anonymity (unlinkability).
+        \item \textbf{Threat model:} Dolev--Yao attacker on Bluetooth channels. Phone--server channel assumed secure in initialization. In tracking phase, phone or participant may be malicious.
+    \end{itemize}
+
+    % ---------- 3 ----------
+    \item \entrypart{Proposed Approach}
+
+    \textbf{Reverse engineering + formal verification.}
+
+    \begin{itemize}
+        \item \textbf{Reverse engineering (Samsung)}
+        \begin{itemize}
+            \item Traffic: Wireshark + nRF52832 sniffer for BLE. BurpSuite for HTTPS (pinning disabled on rooted phones).
+            \item SmartTag firmware extracted via voltage-fault injection on Nordic nRF52.
+            \item Static: Binary Ninja, JADX, FirmXray. Dynamic: Frida hooks.
+            \item Server API testing with crafted requests on own accounts.
+            \item Devices: Galaxy S7, Galaxy S9, two SmartTags (firmware 01.01.26, 01.02.06).
+        \end{itemize}
+        \item \textbf{Apple:} protocol from prior reverse engineering and Apple's 2021 accessory specification.
+        \item \textbf{Formal models} in SAPIC+, translated to ProVerif, Tamarin, DeepSec.
+        \begin{itemize}
+            \item Security goals (P1--P11) taken from vendor documents, plus implicit ones (e.g., ID confidentiality).
+            \item ProVerif first (30 min), then Tamarin (24 h) for reachability. DeepSec for unlinkability.
+            \item Iterative: fix a violation, re-verify.
+        \end{itemize}
+        \item \textbf{Mitigations} proposed and formally verified.
+    \end{itemize}
+
+    % ---------- 4 ----------
+    \item \entrypart{Dataset and Evaluation}
+
+    \begin{itemize}
+        \item \textbf{Targets:} Apple Find My and Samsung Find My Mobile.
+        \item \textbf{Verification:} 17 properties, 8 violations. Initial run under 50 min. Mitigation check under 5 min.
+        \item \textbf{Setup:} 160-core Xeon Platinum 8383C, 2TB RAM.
+        \item \textbf{Ground truth:} vendor confirmation of findings.
+        \item \textbf{Baseline comparison:} Not Specified (qualitative comparison with prior SmartTag work).
+    \end{itemize}
+
+    % ---------- 5 ----------
+    \item \entrypart{Key Findings}
+
+    \begin{itemize}
+        \item \textbf{Samsung protocol recovered:} Just Works BLE without BLE encryption, ECDH with server, challenge-response, binding check, ID generation (pool size, seed, iv). Fixed key pair written at manufacture. Optional E2E with 6-digit PIN.
+        \item \textbf{From reverse engineering:}
+        \begin{itemize}
+            \item \textbf{V1} authentication bypass: rebind a tag already bound to another account (High).
+            \item \textbf{V2} low ID entropy: pool size 1,000. Collecting 80\% of IDs (up to three weeks) gives 96\% tracking success within 30 min (Moderate).
+            \item \textbf{V3} public key reuse in E2E mode links rotating IDs (Moderate).
+            \item \textbf{V4} private key protected only by a 6-digit PIN, brute-forceable if leaked (Low).
+            \item \textbf{I1} E2E off by default. \textbf{I2} E2E not enforced when the key fetch fails.
+        \end{itemize}
+        \item \textbf{From formal verification:}
+        \begin{itemize}
+            \item \textbf{V5} new authentication bypass after fixing V1 (fake hash + fake public key).
+            \item \textbf{V6} ID leakage in Samsung: sniffing initialization reveals all ID parameters (private key derived from MAC).
+            \item \textbf{V7} ID leakage in Apple Find My: MitM on Just Works + replay reveals master public key and rotation keys.
+            \item \textbf{I3/I4} flawed E2E: switch advertisement to no-E2E (Samsung); weak public key G (Apple).
+        \end{itemize}
+        \item \textbf{Disclosure:} Samsung assigned SVE IDs (V1, V5, V6 High). Samsung fixed V1, V2, V3, V5, V6. V5/V6 fixed only for new production. Apple planned a fix in Fall 2024.
+        \item \textbf{Mitigations:} e.g., pool size to 65,535 (80\% collection would take over 3 years), random key injection at manufacture, rotating public keys. All properties hold after mitigations.
+    \end{itemize}
+
+    % ---------- 6 ----------
+    \item \entrypart{Contribution and Limitations}
+
+    \textbf{Contributions (authors)}
+    \begin{itemize}
+        \item Full recovery of Samsung Find My Mobile protocol.
+        \item Formal models of Apple and Samsung protocols and their security goals.
+        \item Seven new vulnerabilities confirmed by vendors.
+        \item Mitigations, formally verified. Models and reverse engineering details released.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Limitations (authors)}
+    \begin{itemize}
+        \item Other vendors (Huawei, Tile, Google) not analyzed (firmware/app extraction failed).
+        \item Symbolic tools cannot model brute force, so V2, V4, I2 not rediscovered.
+        \item Crypto primitives assumed secure. Database and modulo operations simplified.
+        \item Apple unlinkability modeled with only three consecutive sessions.
+    \end{itemize}
+
+    % ---------- 7 ----------
+    \item \entrypart{My Analysis}
+
+    \textbf{Good}
+    \begin{itemize}
+        \item Combines reverse engineering with formal proof, which found bugs RE alone missed (V5).
+        \item Covers all parties (tag, phone, server, other participants).
+        \item Mitigations are both verified and partly adopted by Samsung.
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Weak points}
+    \begin{itemize}
+        \item Only two vendors. Apple side relies on others' reverse engineering and the spec, not own firmware analysis.
+        \item Old test phones (Galaxy S7, S9) and two SmartTag firmware versions. Newer versions not checked. Observation.
+        \item Some attacks need physical access, a rooted phone, or BLE range during pairing.
+        \item Formal results depend on the hand-built model. Simplifications (bounded sessions, no database) may hide attacks.
+        \item Count inconsistencies: intro says ``three during reverse engineering and three through formal verification'' (=6, not 7). Intro says four CVE/SVE numbers, disclosure lists five SVE IDs. ``17 properties'' vs 12 rows in Table 3.
+        \item Link to Android firmware security is indirect (Samsung app and tag firmware only).
+    \end{itemize}
+
+    \vspace{4pt}
+    \textbf{Research gaps}
+    \begin{itemize}
+        \item Analysis of Google's Find My Device network and other vendors.
+        \item Computational (not only symbolic) verification incl. brute-force and entropy.
+        \item Fixes for already-manufactured tags (V5/V6 hardware keys).
+        \item Anti-stalking guarantees within the same formal framework.
+    \end{itemize}
+
+\end{enumerate}
+
 \end{document}
