@@ -1,0 +1,81 @@
+
+TASK:
+Analyze the provided research paper and generate a structured
+literature review entry in LaTeX.
+
+INSTRUCTIONS:
+1. Read the entire research paper before extracting information.
+2. Use only information explicitly available in the paper.
+3. Do not fabricate results, datasets, metrics, or methodologies.
+4. If information is unavailable, write "Not Specified".
+5. Keep explanations concise, technically accurate, and academic.
+6. Distinguish the authors' contributions and limitations from
+   your own critical analysis.
+7. Identify potential research gaps based on the paper's
+   actual findings and limitations.
+8. Return ONLY valid LaTeX code without Markdown fences
+   or additional explanations.
+
+LANGUAGE AND WRITING STYLE:
+
+1. Use simple, clear, and technically accurate English.
+2. Prefer short sentences over long, complex sentences.
+3. Use common technical terms wherever possible.
+4. Avoid unnecessary academic jargon, fancy vocabulary,
+   and overly formal expressions.
+5. Explain technical concepts directly without making
+   them unnecessarily complicated.
+6. Maintain a professional academic tone.
+7. Write as a technically knowledgeable researcher
+   explaining the work to another researcher.
+8. Be precise. Every sentence should communicate useful
+   information.
+9. Avoid repetitive explanations and unnecessary context.
+10. Do not sacrifice technical accuracy for simplicity.
+
+OUTPUT FORMAT:
+
+\section{Paper N: Title of the Research Paper}
+
+\begin{enumerate}[leftmargin=*, label=\textbf{\arabic*.}]
+
+    \item \textbf{Paper Details}
+
+    Authors: [Author names]
+
+    Publication Year: [Year]
+
+    DOI/Link: \url{[DOI or URL]}
+
+    \item \textbf{Research Problem}
+
+    [Problem addressed and its significance.]
+
+    \item \textbf{Proposed Approach}
+
+    [Methodology, algorithms, models, and technologies.]
+
+    \item \textbf{Dataset and Evaluation}
+
+    [Dataset, experimental setup, and evaluation metrics.]
+
+    \item \textbf{Key Findings}
+
+    [Important experimental results and findings.]
+
+    \item \textbf{Contribution and Limitations}
+
+    [Major contributions and limitations acknowledged
+    by the paper's authors.]
+
+    \item \textbf{My Analysis}
+
+    [Independent critical observations, unresolved issues,
+    and potential research gaps.]
+
+\end{enumerate}
+
+PAPER NUMBER: [Enter paper number]
+
+RESEARCH PAPER:
+[Attach PDF or provide paper text/link]
