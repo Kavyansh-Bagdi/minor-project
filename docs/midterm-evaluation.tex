@@ -1,0 +1,981 @@
+
+\documentclass[aspectratio=169,10pt]{beamer}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+
+\usepackage{graphicx,booktabs,array,xcolor,ragged2e}
+
+% Diagram directory
+\graphicspath{{diagrams/}}
+
+% ------------------------------------------------
+% PRESENTATION FORMATTING
+% ------------------------------------------------
+
+\setbeamertemplate{navigation symbols}{}
+
+\setbeamerfont{normal text}{size=\small}
+\setbeamerfont{frametitle}{size=\normalsize}
+\setbeamerfont{title}{size=\Large}
+\setbeamerfont{itemize/enumerate body}{size=\small}
+\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+\setbeamerfont{block body}{size=\small}
+\setbeamerfont{block title}{size=\small}
+
+\setlength{\leftmargini}{1.5em}
+\setlength{\leftmarginii}{1.2em}
+
+% Footer
+\setbeamertemplate{footline}{\leavevmode\hbox{%
+ \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,leftskip=1em]{author in head/foot}
+ \textbf{MNIT Jaipur}
+ \end{beamercolorbox}%
+ \begin{beamercolorbox}[wd=.33\paperwidth,ht=2.5ex,dp=1ex,center]{title in head/foot}
+ Minor Project
+ \end{beamercolorbox}%
+ \begin{beamercolorbox}[wd=.34\paperwidth,ht=2.5ex,dp=1ex,rightskip=1em]{date in head/foot}
+ November 2026 \hfill \insertframenumber/\inserttotalframenumber
+ \end{beamercolorbox}}
+ \vskip0pt
+}
+
+% Table formatting
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1\textwidth}}
+\newcommand{\tbl}{\footnotesize\setlength{\tabcolsep}{3pt}\renewcommand{\arraystretch}{1.3}}
+
+% Highlighted headings
+\newcommand{\hd}[1]{\textbf{\textcolor{blue}{#1}}}
+
+% ------------------------------------------------
+% TITLE INFORMATION
+% ------------------------------------------------
+
+\title[Proposed Security and Privacy Analysis of Android Apps]{
+Security and Privacy Analysis
+of Preinstalled Android Applications\\
+Using Static Taint Analysis
+}
+
+\author{
+\footnotesize
+\textbf{\textcolor{blue}{Kavyansh Bagdi}} (2023UCP1701)\\
+\textbf{\textcolor{blue}{Abhinav Kumar Gupta}} (2023UCP1690)
+}
+
+\institute{
+Malaviya National Institute of Technology, Jaipur\\
+Department of Computer Science and Engineering
+}
+
+\date{November 2026}
+
+% =================================================
+% DOCUMENT
+% =================================================
+
+\begin{document}
+
+% ------------------------------------------------
+% SLIDE 1: TITLE
+% ------------------------------------------------
+
+\begin{frame}
+    \titlepage
+
+    \vspace{-0.7cm}
+
+    \begin{center}
+        \includegraphics[width=0.08\textwidth]{Mnit_logo.png}
+    \end{center}
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 2: OUTLINE
+% ------------------------------------------------
+
+\begin{frame}{Outline}
+
+\begin{columns}[T]
+
+\begin{column}{0.48\textwidth}
+\begin{enumerate}
+    \item Introduction and Motivation
+    \item Problem Statement
+    \item Taint Analysis Fundamentals
+    \item Static vs. Dynamic Analysis
+    \item FlowDroid
+    \item Literature Review
+\end{enumerate}
+\end{column}
+
+\begin{column}{0.48\textwidth}
+\begin{enumerate}
+    \setcounter{enumi}{6}
+    \item Research Gaps
+    \item Objectives and Research Questions
+    \item Proposed Methodology
+    \item Tool Selection
+    \item Implementation Plan
+    \item Conclusion and Next Steps
+\end{enumerate}
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 3: INTRODUCTION
+% ------------------------------------------------
+
+\begin{frame}{Introduction: Android and Preinstalled Applications}
+
+\begin{columns}[T]
+
+\begin{column}{0.48\textwidth}
+
+\hd{Android Architecture}\\[4pt]
+
+\centering
+\includegraphics[width=\linewidth,height=3.6cm,keepaspectratio]{android_arch.drawio.png}
+
+\raggedright
+\footnotesize
+APKs contain DEX bytecode, resources and a manifest.
+Android uses UID-based process sandboxing and Binder IPC.
+
+\end{column}
+
+\begin{column}{0.50\textwidth}
+
+\hd{Preinstalled / System Apps}
+
+\begin{itemize}
+    \item Bundled with device firmware by OEMs or carriers.
+    \item Commonly stored in \texttt{/system/app} and \texttt{/system/priv-app}.
+    \item Privileged apps may access protected services.
+    \item Examples: Settings, Camera, Dialer, Samsung Health and SmartThings.
+\end{itemize}
+
+\hd{Sensitive Resources}
+
+\begin{itemize}
+    \item Location, camera and microphone.
+    \item Contacts, call logs and SMS.
+    \item Device identifiers and account information.
+\end{itemize}
+
+\end{column}
+\end{columns}
+
+\begin{block}{Why Examine Preinstalled Applications?}
+Preinstalled applications may have broad access to device resources and may not be fully removable or independently auditable by users.
+\end{block}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 4: MOTIVATION
+% ------------------------------------------------
+
+\begin{frame}{Motivation}
+
+\begin{itemize}
+
+    \item \textbf{Large Attack Surface:}
+    The same applications may be distributed across multiple devices within a firmware family.
+
+    \vspace{5pt}
+
+    \item \textbf{Elevated Permissions:}
+    System applications may hold permissions such as
+    \texttt{READ\_CONTACTS},
+    \texttt{ACCESS\_FINE\_LOCATION} and
+    \texttt{READ\_CALL\_LOG}.
+
+    \vspace{5pt}
+
+    \item \textbf{Potential Data Exposure:}
+    Sensitive information may flow to network interfaces, files, logs or other applications.
+
+    \vspace{5pt}
+
+    \item \textbf{Limited User Control:}
+    Certain preinstalled applications cannot be completely uninstalled through normal user interfaces.
+
+    \vspace{5pt}
+
+    \item \textbf{Existing Research:}
+    Studies such as FIRMSCOPE (2020) and Gamba et al. (2020) identify security and privacy concerns in OEM-provided software.
+
+\end{itemize}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 5: PROBLEM STATEMENT
+% ------------------------------------------------
+
+\begin{frame}{Problem Statement}
+
+Preinstalled Android applications bundled by OEMs such as Samsung may possess elevated permissions and access privacy-sensitive resources.
+
+However, identifying how sensitive information propagates within these applications and whether it reaches potentially unsafe destinations requires systematic source-to-sink analysis.
+
+\vspace{8pt}
+
+\hd{Key Research Challenges}
+
+\begin{itemize}
+
+    \item \textbf{Scale:}
+    Firmware may contain hundreds of preinstalled APKs.
+
+    \item \textbf{Obfuscation:}
+    OEM application code may be difficult to inspect.
+
+    \item \textbf{False Positives:}
+    Automatically reported flows require manual examination.
+
+    \item \textbf{API Modelling:}
+    Analysis accuracy depends on appropriate source and sink definitions.
+
+    \item \textbf{Closed Source:}
+    APKs require reverse engineering to inspect application logic.
+
+\end{itemize}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 6: TAINT ANALYSIS
+% ------------------------------------------------
+
+\begin{frame}{Taint Analysis: Sources, Propagation and Sinks}
+
+Taint analysis tracks sensitive or untrusted data as it moves through an application.
+
+\vspace{5pt}
+
+\begin{columns}[T]
+
+\begin{column}{0.31\textwidth}
+
+\begin{block}{1. Source}
+Origin of sensitive data.
+
+\begin{itemize}
+    \item GPS location
+    \item Contacts / SMS
+    \item Device identifiers
+    \item Microphone
+\end{itemize}
+
+\end{block}
+
+\end{column}
+
+\begin{column}{0.35\textwidth}
+
+\begin{block}{2. Propagation}
+Movement through operations.
+
+\begin{itemize}
+    \item Assignments
+    \item Method calls
+    \item Object fields
+    \item Return values
+\end{itemize}
+
+\end{block}
+
+\end{column}
+
+\begin{column}{0.31\textwidth}
+
+\begin{block}{3. Sink}
+Potentially sensitive destination.
+
+\begin{itemize}
+    \item HTTP requests
+    \item Files and logs
+    \item SMS transmission
+    \item IPC
+\end{itemize}
+
+\end{block}
+
+\end{column}
+
+\end{columns}
+
+\vspace{5pt}
+
+\begin{alertblock}{Example Data Flow}
+\centering
+\textbf{GPS Location}
+$\longrightarrow$
+\textbf{Application Variable}
+$\longrightarrow$
+\textbf{HTTP Request}
+\end{alertblock}
+
+A detected path indicates a \emph{potential} information flow; it does not independently establish unauthorized data transmission.
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 7: STATIC VS DYNAMIC
+% ------------------------------------------------
+
+\begin{frame}{Static Analysis vs. Dynamic Analysis}
+
+\begin{table}
+\centering
+\tbl
+
+\begin{tabular}{|L{.17}|L{.38}|L{.38}|}
+\hline
+\textbf{Parameter} &
+\textbf{Static Analysis} &
+\textbf{Dynamic Analysis}\\
+\hline
+
+Execution &
+Examines code without running the application &
+Examines the application during execution\\
+\hline
+
+Coverage &
+Can analyse multiple feasible code paths &
+Limited to paths exercised during testing\\
+\hline
+
+Requirements &
+APK and analysis framework &
+Running application and execution environment\\
+\hline
+
+Detection &
+Reports potential source-to-sink flows &
+Observes runtime behaviour and flows\\
+\hline
+
+Limitations &
+False positives and incomplete API models &
+May miss unexecuted paths\\
+\hline
+
+Examples &
+FlowDroid, Amandroid &
+TaintDroid, dynamic instrumentation\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\begin{block}{Rationale for Selecting Static Analysis}
+Static analysis enables examination of APKs without executing system applications and can identify potential flows across code paths that may not be triggered during testing.
+\end{block}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 8: FLOWDROID
+% ------------------------------------------------
+
+\begin{frame}{Selected Framework: FlowDroid}
+
+\hd{What is FlowDroid?}
+
+An open-source static taint analysis framework designed to identify potential privacy leaks in Android applications.
+
+\begin{center}
+\includegraphics[width=0.92\textwidth,height=1.6cm,keepaspectratio]{flowdroid_pipeline.drawio.png}
+\end{center}
+
+\hd{Key Technical Components}
+
+\begin{itemize}
+
+    \item \textbf{Soot:}
+    Converts application bytecode into the Jimple intermediate representation.
+
+    \item \textbf{Android Lifecycle Model:}
+    Represents application components and lifecycle callbacks.
+
+    \item \textbf{IFDS:}
+    Supports inter-procedural data-flow analysis.
+
+    \item \textbf{Source--Sink Matching:}
+    Identifies potential paths between configured sources and sinks.
+
+\end{itemize}
+
+\vspace{3pt}
+
+\footnotesize
+FlowDroid is selected as the primary framework for the proposed static taint analysis.
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 9: LITERATURE REVIEW I
+% ------------------------------------------------
+
+\begin{frame}{Literature Review I: Firmware and Preinstalled Apps}
+
+\begin{table}
+\centering
+\tbl
+
+\begin{tabular}{|L{.18}|L{.15}|L{.31}|L{.28}|}
+\hline
+
+\textbf{Paper} &
+\textbf{Authors / Year} &
+\textbf{Focus / Contribution} &
+\textbf{Limitations / Relevance}\\
+\hline
+
+FIRMSCOPE &
+Almakhdhub et al., USENIX 2020 &
+Finds privilege-escalation vulnerabilities in preinstalled apps; analyses 2,017 firmware images across 11 OEMs. &
+Static-analysis limitations; findings require validation. Demonstrates firmware-level risks.\\
+\hline
+
+An Analysis of Pre-installed Android Software &
+Gamba et al., IEEE S\&P 2020 &
+Characterises preinstalled software and its data collection and sharing practices. &
+Encrypted traffic limits visibility. Highlights OEM privacy concerns.\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 10: LITERATURE REVIEW II
+% ------------------------------------------------
+
+\begin{frame}{Literature Review II: OEM Analysis}
+
+\begin{table}
+\centering
+\tbl
+
+\begin{tabular}{|L{.18}|L{.15}|L{.31}|L{.28}|}
+\hline
+
+\textbf{Paper} &
+\textbf{Authors / Year} &
+\textbf{Focus / Contribution} &
+\textbf{Limitations / Relevance}\\
+\hline
+
+DroidRay &
+Wong and Lie, ASIACCS 2014 &
+Evaluates customised firmware using static and dynamic taint analysis. &
+Dynamic coverage depends on execution; runtime overhead.\\
+\hline
+
+Do Android Dream of Electric Sheep? &
+Kunze et al., PoPETS 2022 &
+Studies data flows and persistent identifiers in OEM-bundled applications. &
+Network-observable coverage; encrypted traffic limits visibility.\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 11: LITERATURE REVIEW III
+% ------------------------------------------------
+
+\begin{frame}{Literature Review III: Bloatware and Low-Cost Devices}
+
+\begin{table}
+\centering
+\tbl
+
+\begin{tabular}{|L{.18}|L{.15}|L{.31}|L{.28}|}
+\hline
+
+\textbf{Paper} &
+\textbf{Authors / Year} &
+\textbf{Focus / Contribution} &
+\textbf{Limitations / Relevance}\\
+\hline
+
+PiPLAnD &
+Reyes et al., WPES 2018 &
+Studies security and privacy of preinstalled apps on low-cost devices, including permissions and tracking. &
+Limited code-level inspection; motivates deeper analysis.\\
+\hline
+
+Pleasure or Pain? &
+Zhan et al., IEEE TDSC 2020 &
+Examines costs and utilities of bloatware applications and their security and user-experience implications. &
+Does not provide deep source-to-sink taint analysis.\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 12: LITERATURE REVIEW IV
+% ------------------------------------------------
+
+\begin{frame}{Literature Review IV: Static Analysis Frameworks}
+
+\begin{table}
+\centering
+\tbl
+
+\begin{tabular}{|L{.15}|L{.15}|L{.31}|L{.31}|}
+\hline
+
+\textbf{Framework / Paper} &
+\textbf{Authors / Year} &
+\textbf{Contribution} &
+\textbf{Limitations / Relevance}\\
+\hline
+
+FlowDroid &
+Arzt et al., PLDI 2014 &
+Context-, flow-, field-, object-sensitive and lifecycle-aware taint analysis. &
+Reflection and analysis complexity. Selected framework.\\
+\hline
+
+AndroidLeaks &
+Gibler et al., TRUST 2012 &
+Early large-scale automated privacy-leak detection. &
+Limited context sensitivity and source/sink coverage.\\
+\hline
+
+Amandroid &
+Wei et al., CCS 2014 &
+General Android security analysis with ICC support. &
+Analysis overhead and reflection limitations.\\
+\hline
+
+DroidSafe &
+Gordon et al., NDSS 2015 &
+Information-flow analysis with detailed API modelling. &
+High analysis time and modelling effort.\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 13: RESEARCH GAPS
+% ------------------------------------------------
+
+\begin{frame}{Research Gaps}
+
+The reviewed literature provides a foundation for studying Android firmware security. The proposed research focuses on the following opportunities:
+
+\begin{itemize}
+
+    \item \textbf{Device-Specific Analysis:}
+    Broad firmware studies provide useful insights, while focused analysis of a particular OEM device can provide additional application-level detail.
+
+    \vspace{4pt}
+
+    \item \textbf{Source-to-Sink Analysis:}
+    Further examination of inter-procedural data flows can complement permission-based and network-level studies.
+
+    \vspace{4pt}
+
+    \item \textbf{False-Positive Validation:}
+    Automatically identified flows require manual review to assess their practical significance.
+
+    \vspace{4pt}
+
+    \item \textbf{Samsung Ecosystem:}
+    Static taint analysis of selected One UI preinstalled applications offers a focused area of investigation.
+
+    \vspace{4pt}
+
+    \item \textbf{Reproducibility:}
+    A documented ADB--JADX--Apktool--FlowDroid workflow can support repeatable application analysis.
+
+\end{itemize}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 14: OBJECTIVES AND QUESTIONS
+% ------------------------------------------------
+
+\begin{frame}{Research Objectives and Questions}
+
+\begin{columns}[T]
+
+\begin{column}{0.49\textwidth}
+
+\hd{Main Objective}
+
+\small
+Develop a systematic approach for analysing preinstalled applications on a Samsung Android device to identify potential sensitive data flows through static taint analysis.
+
+\vspace{5pt}
+
+\hd{Specific Objectives}
+
+\begin{itemize}
+    \small
+    \item Extract and catalogue preinstalled APKs using ADB.
+    \item Classify applications based on permissions and functionality.
+    \item Inspect APKs using JADX and Apktool.
+    \item Configure FlowDroid for source-to-sink analysis.
+    \item Validate identified flows and assess false positives.
+\end{itemize}
+
+\end{column}
+
+\begin{column}{0.49\textwidth}
+
+\hd{Research Questions}
+
+\begin{itemize}
+    \small
+    \item Which selected applications declare relevant dangerous permissions?
+    \item Do they contain identifiable source-to-sink flows?
+    \item Which sources and sinks occur most frequently?
+    \item How many reported flows remain valid after manual review?
+\end{itemize}
+
+\hd{Anticipated Contributions}
+
+\begin{itemize}
+    \small
+    \item APK and permission catalogue.
+    \item Classification of potential taint flows.
+    \item Manual validation methodology.
+    \item Reproducible analysis workflow.
+\end{itemize}
+
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 15: PROPOSED METHODOLOGY
+% ------------------------------------------------
+
+\begin{frame}{Proposed Methodology: Overall Workflow}
+
+\begin{center}
+\includegraphics[width=0.95\textwidth,height=3.4cm,keepaspectratio]{workflow.drawio.png}
+\end{center}
+
+\begin{columns}[T]
+
+\begin{column}{0.48\textwidth}
+
+\hd{Phase 1: Preparation}
+
+\footnotesize
+\begin{itemize}
+    \item Configure the target device.
+    \item Extract and catalogue APKs.
+    \item Select relevant applications.
+    \item Inspect application structure.
+\end{itemize}
+
+\end{column}
+
+\begin{column}{0.48\textwidth}
+
+\hd{Phase 2: Static Analysis}
+
+\footnotesize
+\begin{itemize}
+    \item Define sources and sinks.
+    \item Configure and execute FlowDroid.
+    \item Classify reported flows.
+    \item Manually validate findings.
+    \item Document results.
+\end{itemize}
+
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 16: TOOL STACK
+% ------------------------------------------------
+
+\begin{frame}{Proposed Methodology: Selected Tool Stack}
+
+\begin{table}
+\centering
+\tbl
+
+\begin{tabular}{|L{.11}|L{.20}|L{.37}|L{.24}|}
+\hline
+
+\textbf{Tool} &
+\textbf{Purpose} &
+\textbf{Planned Operations} &
+\textbf{Expected Output}\\
+\hline
+
+ADB &
+Device communication and APK extraction &
+List system packages and retrieve selected APKs &
+APK files and metadata\\
+\hline
+
+JADX &
+DEX-to-Java decompilation &
+Browse classes, methods and sensitive API calls &
+Decompiled Java code\\
+\hline
+
+Apktool &
+APK disassembly &
+Decode manifests, permissions and Smali code &
+Decoded manifest and Smali\\
+\hline
+
+FlowDroid &
+Static taint analysis &
+Configure sources and sinks; analyse selected APKs &
+Source-to-sink reports\\
+\hline
+
+MobSF &
+Preliminary security analysis &
+Inspect permissions, certificates and application metadata &
+HTML / JSON report\\
+\hline
+
+\end{tabular}
+\end{table}
+
+\vspace{3pt}
+
+\footnotesize
+The listed tools constitute the proposed analysis environment. Their integration and execution form the next implementation phase.
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 17: APK EXTRACTION
+% ------------------------------------------------
+
+\begin{frame}{Implementation Plan: APK Extraction and Selection}
+
+\begin{columns}[T]
+
+\begin{column}{0.49\textwidth}
+
+\hd{Planned APK Extraction Steps}
+
+\begin{enumerate}
+
+    \item Enable Developer Options and USB Debugging.
+
+    \item Connect the Samsung device and authorize ADB.
+
+    \item List system packages:
+
+    {\footnotesize
+    \texttt{adb shell pm list packages -f -s}
+    }
+
+    \item Retrieve selected APKs:
+
+    {\footnotesize
+    \texttt{adb pull <remote\_path> <local\_dest>}
+    }
+
+    \item Verify SHA-256 checksums and record metadata.
+
+\end{enumerate}
+
+\end{column}
+
+\begin{column}{0.49\textwidth}
+
+\hd{Application Selection Criteria}
+
+\begin{itemize}
+
+    \item \textbf{Permissions:}
+    Applications declaring relevant dangerous permissions.
+
+    \item \textbf{Functionality:}
+    Communication, health, sensor and browser applications.
+
+    \item \textbf{Partitions:}
+    Prioritise system and privileged applications.
+
+    \item \textbf{Scope:}
+    Deprioritise applications without relevant resource access or data transfer.
+
+\end{itemize}
+
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 18: FLOWDROID ANALYSIS
+% ------------------------------------------------
+
+\begin{frame}{Implementation Plan: FlowDroid Analysis}
+
+\begin{center}
+\includegraphics[width=0.95\textwidth,height=1.6cm,keepaspectratio]{analysis_pipeline.drawio.png}
+\end{center}
+
+\begin{columns}[T]
+
+\begin{column}{0.49\textwidth}
+
+\hd{Potential Sources}
+
+\begin{itemize}
+    \item Location APIs
+    \item Telephony and device identifiers
+    \item Contacts, SMS and call-log APIs
+    \item Audio recording and account APIs
+    \item Clipboard data
+\end{itemize}
+
+\end{column}
+
+\begin{column}{0.49\textwidth}
+
+\hd{Potential Sinks}
+
+\begin{itemize}
+    \item HTTP, sockets and network I/O
+    \item File write operations
+    \item SMS sending APIs
+    \item Logging methods
+    \item Intent, IPC and ContentProvider operations
+\end{itemize}
+
+\end{column}
+
+\end{columns}
+
+\vspace{3pt}
+
+\footnotesize
+Source and sink definitions will be configured according to the selected Android APIs. Reported paths will subsequently be examined to assess their validity and privacy relevance.
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 19: CONCLUSION
+% ------------------------------------------------
+
+\begin{frame}{Conclusion and Next Steps}
+
+The research problem, literature foundation, objectives and technical methodology have been established for the proposed security and privacy analysis of preinstalled Android applications.
+
+The selected approach combines ADB-based APK extraction, JADX and Apktool for application inspection, and FlowDroid for static taint analysis.
+
+\vspace{5pt}
+
+\hd{Established Research Foundation}
+
+\begin{itemize}
+    \item Research problem and scope have been defined.
+    \item Relevant existing studies and research gaps have been examined.
+    \item Research objectives and questions have been formulated.
+    \item Analysis tools and technical workflow have been selected.
+\end{itemize}
+
+\hd{Next Phase: Implementation and Evaluation}
+
+\begin{itemize}
+    \item Implement the proposed APK extraction and processing workflow.
+    \item Configure and execute FlowDroid on selected applications.
+    \item Examine and manually validate potential data flows.
+    \item Analyse findings and prepare the final research report.
+\end{itemize}
+
+\begin{alertblock}{Current Research Position}
+The research design and proposed methodology are established. Implementation of the planned analysis pipeline is the immediate pending stage, followed by experimental evaluation and validation.
+\end{alertblock}
+
+\end{frame}
+
+% ------------------------------------------------
+% SLIDE 20: REFERENCES
+% ------------------------------------------------
+
+\begin{frame}{References}
+
+\tiny
+
+\begin{columns}[T]
+
+\begin{column}{0.49\textwidth}
+
+\begin{enumerate}
+
+    \item N. Almakhdhub et al., ``FIRMSCOPE: Automatic Uncovering of Privilege-Escalation Vulnerabilities in Pre-Installed Apps in Android Firmware,'' USENIX Security, 2020.
+
+    \item J. Gamba et al., ``An Analysis of Pre-Installed Android Software,'' IEEE S\&P, 2020.
+
+    \item M. Wong and D. Lie, ``DroidRay: A Security Evaluation System for Customized Android Firmwares,'' ACM ASIACCS, 2014.
+
+    \item L. Kunze et al., ``Do Android Dream of Electric Sheep? Analyzing Pre-installed Android Apps in the Wild,'' PoPETS, 2022.
+
+    \item I. Reyes et al., ``PiPLAnD: On the Security of Pre-installed Android Apps in Low-cost Devices,'' ACM WPES, 2018.
+
+\end{enumerate}
+
+\end{column}
+
+\begin{column}{0.49\textwidth}
+
+\begin{enumerate}
+\setcounter{enumi}{5}
+
+    \item X. Zhan et al., ``Pleasure or Pain? An Evaluation of the Costs and Utilities of Bloatware Applications in Android Smartphones,'' IEEE TDSC, 2020.
+
+    \item S. Arzt et al., ``FlowDroid: Precise Context, Flow, Field, Object-Sensitive and Lifecycle-Aware Taint Analysis for Android Apps,'' ACM PLDI, 2014.
+
+    \item C. Gibler et al., ``AndroidLeaks: Automatically Detecting Potential Privacy Leaks in Android Applications on a Large Scale,'' TRUST, 2012.
+
+    \item F. Wei et al., ``Amandroid: A Precise and General Inter-Component Data Flow Analysis Framework for Security Vetting of Android Apps,'' ACM CCS, 2014.
+
+    \item M. I. Gordon et al., ``Information-Flow Analysis of Android Applications in DroidSafe,'' NDSS, 2015.
+
+\end{enumerate}
+
+\end{column}
+
+\end{columns}
+
+\end{frame}
+
+% =================================================
+% END DOCUMENT
+% =================================================
+
+\end{document}
+
